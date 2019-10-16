@@ -1,0 +1,5 @@
+cd ~/Desktop/Research/sphero-project/spherov2.js/examples
+sudo yarn server
+
+cd ~/Desktop/Research/sphero-project/src
+python3 audio_io.py

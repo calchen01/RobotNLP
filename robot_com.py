@@ -7,67 +7,32 @@ import re
 import time
 from client import DroidClient
 from matplotlib import colors
+from r2d2_commands import *
 
 __author__ = "Zhenghua (Calvin) Chen"
 
-class Robot(object):
-
-    def __init__(self, robot_id):
-        self.robot = DroidClient()
-        connected = self.robot.connect_to_droid(robot_id)
-        while not connected:
-            connected = self.robot.connect_to_droid(robot_id)
-        self.dirMap = {
-            "up": 0,
-            "right": 90,
-            "down": 180,
-            "left": 270
-        }
-        
-    def roll(self, heading):
-        self.robot.roll(0, self.dirMap.get(heading), 0)
-        time.sleep(0.35)
-        self.robot.roll(1, self.dirMap.get(heading), 0.62)
-
-    def set_front_LED_color(self, tokens):
-        for token in tokens:
-            if colors.is_color_like(token):
-                rgb = colors.to_rgba(token)
-                self.robot.set_front_LED_color(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
-                break
-            elif token in {"kill", "off"}:
-                self.robot.set_front_LED_color(0, 0, 0)
-                break
-
-    def set_back_LED_color(self, tokens):
-        for token in tokens:
-            if colors.is_color_like(token):
-                rgb = colors.to_rgba(token)
-                self.robot.set_back_LED_color(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
-                break
-            elif token in {"kill", "off"}:
-                self.robot.set_back_LED_color(0, 0, 0)
-                break
-
-    def animate(self):
-        # 55 animations available
-        self.robot.animate(random.randint(1, 55))
-
-    def play_sound(self):
-        # 49 sounds available
-        self.robot.play_sound(random.randint(1, 49))
-
-    def reset(self):
-        self.robot.roll(0, 0, 0)
-
-    def disconnect(self):
-        self.robot.disconnect()
-
 # Uncomment the code below for command line IO, remember to recomment if you are using voice IO
-'''
+
 def main():
+    categories = ["state", "direction", "light", "animation", "head", "grid"]
+    indexToTrainingSentence = {}
+    i = 0
+    for category in categories:
+        sentenceType = globals()[category + "Sentences"]
+        for sentence in sentenceType:
+            indexToTrainingSentence[i] = (sentence, category)
+            i += 1
+    
+    sentenceEmbeddings = np.zeros((len(indexToTrainingSentence), vectors.dim))
+
+    for i in range(len(indexToTrainingSentence)):
+        sentence = indexToTrainingSentence[i][0]
+        sentenceEmbedding = calcPhraseEmbedding(sentence)
+
+    sentenceEmbeddings[i, :] = sentenceEmbedding
+
     # Replace this with your own robot serial ID
-    robot = Robot("XX-XXXX")
+    robot = Robot("D2-F75E")
     while True:
         print("\nEnter your instruction: ")
         cmd = input().lower()
@@ -84,20 +49,39 @@ def main():
                 robot.set_front_LED_color(tokens)
                 robot.set_back_LED_color(tokens)
         else:
+            flag = False
             for token in tokens:
                 if token in {"up", "forward", "ahead", "straight"}:
                     robot.roll("up")
+                    flag = True
                 elif token in {"down", "back"}:
                     robot.roll("down")
+                    flag = True
                 elif token in {"left", "right"}:
                     robot.roll(token)
+                    flag = True
                 elif token in {"dance", "move", "moves"}:
                     robot.animate()
+                    flag = True
                 elif token in {"sing", "sound", "sounds", "noise", "noises"}:
                     robot.play_sound()
-    robot.reset()
+                    flag = True
+            if flag:
+                commandEmbedding = calcPhraseEmbedding(cmd)
+
+                closestSentences = rankSentences(commandEmbedding, sentenceEmbeddings)
+                if cosineSim(commandEmbedding, sentenceEmbeddings[closestSentences[0], :]) < 0.85:
+                    print(robot.name + ": I could not understand your command.")
+                    continue
+
+                commandType = getCommandType(categories, closestSentences, indexToTrainingSentence)
+                result = getattr(robot, commandType + "Parser")(cmd)
+                if result:
+                    print(robot.name + ": Done executing "  + commandType + " command.")
+                else:
+                    print(robot.name + ": I could not understand your " + commandType + " command.")
+
     robot.disconnect()
-            
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
-'''

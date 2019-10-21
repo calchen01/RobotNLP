@@ -179,12 +179,12 @@ def main():
     # for a list of supported languages.
 
     # Replace this with your own robot serial ID
-    robot = Robot("XX-XXXX")
+    robot = Robot("D2-F75E")
 
-    language_code = 'en-US' # a BCP-47 language tag
+    language_code = "en-US" # a BCP-47 language tag
 
     client = speech.SpeechClient().from_service_account_json(
-        'credentials.json')
+        "credentials.json")
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,
@@ -203,5 +203,5 @@ def main():
         # Now, put the transcription responses to use.
         listen_execute_loop(responses, robot)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

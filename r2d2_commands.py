@@ -1,16 +1,10 @@
 from pymagnitude import *
-from sklearn.cluster import KMeans
-from sklearn.metrics import silhouette_score
-import time
-import csv
-import re
-import numpy as np
-
 from client import DroidClient
+from matplotlib import *
 
-path = "/Volumes/SD/hw4_2019/"
+__author__ = "John Zhang"
 
-vectors = Magnitude(path + "vectors/word2vecRetrofitted.magnitude")
+vectors = Magnitude("/Users/calchen/Desktop/sphero-project/GoogleNews-vectors-negative300.magnitude")
 
 stateSentences = [
 # Questions about the state of the droid
@@ -92,8 +86,9 @@ def cosineSim(vector1, vector2):
     return np.dot(vector1, vector2)/(np.linalg.norm(vector1) * np.linalg.norm(vector2))
 
 def calcPhraseEmbedding(sentence):
-    words = re.split('\W+', sentence)
-    words = [x.lower() for x in words if x.lower() not in ["", "a", "an", "the", "is"]]
+    sentence = sentence.lower()
+    words = re.split("\W+", sentence)
+    words = [x for x in words if x not in {"", "a", "an", "the", "is"}]
     if "?" in sentence:
         words.append("?")
     return vectors.query(words).sum(axis = 0) / len(words)
@@ -122,22 +117,73 @@ def getCommandType(categories, closestSentences, indexToTrainingSentence):
 
     return max(commandDict, key=commandDict.get)
 
-class AnimateR2:
+class Robot(object):
+
     def __init__(self, droidID):
         self.droid = DroidClient()
-        self.droid.connect_to_droid(droidID)
+        connected = self.droid.connect_to_droid(droidID)
+        while not connected:
+            connected = self.droid.connect_to_droid(droidID)
         self.name = "R2"
         self.holoProjectorIntensity = 0
         self.logicDisplayIntensity = 0
         self.frontRGB = (0, 0, 0)
         self.backRGB = (0, 0, 0)
+        self.dirMap = {
+            "up": 0,
+            "right": 90,
+            "down": 180,
+            "left": 270
+        }
 
-        self.colorToRGB = {}
+    def roll(self, heading):
+        self.droid.roll(0, self.dirMap.get(heading), 0)
+        time.sleep(0.35)
+        self.droid.roll(1, self.dirMap.get(heading), 0.62)
 
-        with open(path + 'data/colors.csv') as csvfile:
-            readCSV = csv.reader(csvfile, delimiter=',')
-            for row in readCSV:
-                self.colorToRGB[row[0]] = (int(row[2]), int(row[3]), int(row[4]))
+    def set_front_LED_color(self, tokens):
+        for token in tokens:
+            if colors.is_color_like(token):
+                rgb = colors.to_rgba(token)
+                self.droid.set_front_LED_color(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
+                break
+            elif token in {"kill", "off"}:
+                self.droid.set_front_LED_color(0, 0, 0)
+                break
+
+    def set_back_LED_color(self, tokens):
+        for token in tokens:
+            if colors.is_color_like(token):
+                rgb = colors.to_rgba(token)
+                self.droid.set_back_LED_color(rgb[0] * 255, rgb[1] * 255, rgb[2] * 255)
+                break
+            elif token in {"kill", "off"}:
+                self.droid.set_back_LED_color(0, 0, 0)
+                break
+
+    def animate(self):
+        # 55 animations available
+        self.droid.animate(random.randint(1, 55))
+
+    def play_sound(self):
+        # 49 sounds available
+        self.droid.play_sound(random.randint(1, 49))
+
+    def reset(self):
+        self.droid.roll(0, 0, 0)
+
+    def disconnect(self):
+        self.droid.disconnect()
+
+    def flash_colors(self, colors_arr, seconds = 1, front = True):
+        if front:
+            for color in colors_arr:
+                self.droid.set_front_LED_color(*color)
+                time.sleep(seconds)
+        else:
+            for color in colors_arr:
+                self.droid.set_back_LED_color(*color)
+                time.sleep(seconds)
 
     def stateParser(self, command):
         print("stateParser has not yet been initialized.")
@@ -145,7 +191,17 @@ class AnimateR2:
     def directionParser(self, command):
         print("directionParser has not yet been initialized.")
 
+    def animationParser(self, command):
+        print("animationParser has not yet been initialized.")
+
+    def headParser(self, command):
+        print("headParser has not yet been initialized.")
+
+    def gridParser(self, command):
+        print("gridParser has not yet been initialized.")
+
     def lightParser(self, command):
+
         if "holoemitter" in command or "holo emitter" in command:
             if "off" in command or "out" in command or "minimum" in command:
                 self.holoProjectorIntensity = 0
@@ -157,7 +213,7 @@ class AnimateR2:
                 self.holoProjectorIntensity = 1
                 self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             if "blink" in command:
-                self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1)%2)
+                self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1) %2)
                 time.sleep(0.3)
                 self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             return True
@@ -277,22 +333,22 @@ class AnimateR2:
 
             return changed
 
-        colors = []
+        colors_arr = []
         for word in words:
-            if word in self.colorToRGB:
-                colors.append(self.colorToRGB[word])
+            if colors.is_color_like(word):
+                colors_arr.append((rgb[0] * 255, rgb[1] * 255, rgb[2] * 255))
 
         if "back" in command:
-            if len(colors) > 1:
+            if len(colors_arr) > 1:
                 seconds = 1
                 for word in words:
                     try:
                         seconds = int(word)
                     except ValueError:
                         continue
-                self.flash_colors(colors, seconds, False)
-            elif len(colors) == 1:
-                self.backRGB = colors[0]
+                self.flash_colors(colors_arr, seconds, False)
+            elif len(colors_arr) == 1:
+                self.backRGB = colors_arr[0]
             else:
                 changed = False
                 for i in range(len(words) - 2):
@@ -307,17 +363,17 @@ class AnimateR2:
             self.droid.set_back_LED_color(*self.backRGB)
             return True
 
-        if "front" in command or "forward" in command or len(colors) > 1:
-            if len(colors) > 1:
+        if "front" in command or "forward" in command or len(colors_arr) > 1:
+            if len(colors_arr) > 1:
                 seconds = 1
                 for word in words:
                     try:
                         seconds = int(word)
                     except ValueError:
                         continue
-                self.flash_colors(colors, seconds)
-            elif len(colors) == 1:
-                self.frontRGB = colors[0]
+                self.flash_colors(colors_arr, seconds)
+            elif len(colors_arr) == 1:
+                self.frontRGB = colors_arr[0]
             else:
                 changed = False
                 for i in range(len(words) - 2):
@@ -332,14 +388,14 @@ class AnimateR2:
             self.droid.set_front_LED_color(*self.frontRGB)
             return True
 
-        if len(colors) == 1:
-            self.backRGB = colors[0]
-            self.frontRGB = colors[0]
+        if len(colors_arr) == 1:
+            self.backRGB = colors_arr[0]
+            self.frontRGB = colors_arr[0]
             self.droid.set_back_LED_color(*self.backRGB)
             self.droid.set_front_LED_color(*self.frontRGB)
             return True
 
-        if len(colors) == 0:
+        if len(colors_arr) == 0:
             changed = False
             for i in range(len(words) - 2):
                 try:
@@ -384,78 +440,4 @@ class AnimateR2:
             self.droid.set_logic_display_intensity(self.logicDisplayIntensity)  
             return True
 
-        return False      
-
-    def animationParser(self, command):
-        print("animationParser has not yet been initialized.")
-
-    def headParser(self, command):
-        print("headParser has not yet been initialized.")
-
-    def gridParser(self, command):
-        print("gridParser has not yet been initialized.")
-
-    def flash_colors(self, colors, seconds = 1, front = True):
-        if front:
-            for color in colors:
-                self.droid.set_front_LED_color(*color)
-                time.sleep(seconds)
-        else:
-            for color in colors:
-                self.droid.set_back_LED_color(*color)
-                time.sleep(seconds)
-
-
-
-
-
-
-
-
-
-
-
-categories = ["state", "direction", "light", "animation", "head", "grid"]
-
-indexToTrainingSentence = {}
-
-i = 0
-for category in categories:
-    sentenceType = globals()[category + "Sentences"]
-    for sentence in sentenceType:
-        indexToTrainingSentence[i] = (sentence, category)
-        i += 1
-
-sentenceEmbeddings = np.zeros((len(indexToTrainingSentence), vectors.dim))
-
-for i in range(len(indexToTrainingSentence)):
-    sentence = indexToTrainingSentence[i][0]
-    sentenceEmbedding = calcPhraseEmbedding(sentence)
-
-    sentenceEmbeddings[i, :] = sentenceEmbedding
-
-print("Welcome to CommandDroid, where we will try our best to understand what you want our R2D2 to do.")
-print("In this environment, type 'exit()' to quit.")
-print("***********************************************")
-
-animateR2 = AnimateR2('D2-152E')
-
-while(True):
-    command = input("You: ")
-    if command.strip() == "exit()":
-        print("Have a nice day!")
-        break
-
-    commandEmbedding = calcPhraseEmbedding(command)
-
-    closestSentences = rankSentences(commandEmbedding, sentenceEmbeddings)
-    if cosineSim(commandEmbedding, sentenceEmbeddings[closestSentences[0], :]) < 0.85:
-        print(animateR2.name + ": I could not understand your command.")
-        continue
-
-    commandType = getCommandType(categories, closestSentences, indexToTrainingSentence)
-    result = getattr(animateR2, commandType + "Parser")(command.lower())
-    if result:
-        print(animateR2.name + ": Done executing "  + commandType + " command.")
-    else:
-        print(animateR2.name + ": I could not understand your " + commandType + " command.")
+        return False

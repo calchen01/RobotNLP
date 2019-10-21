@@ -1,5 +1,25 @@
 # RobotNLP
 
+## Start Server & Run Project
+
+In one Terminal session, type:
+```
+cd .../sphero-project/spherov2.js/examples
+sudo yarn server
+```
+Keep it running. In another Terminal session, type:
+```
+cd .../sphero-project/src
+```
+For command line IO, type:
+```
+python3 robot_com.py
+```
+or for voice IO, type:
+```
+python3 audio_io.py
+```
+
 ## Natural Language Commands (Command Line / Voice IO)
 
 Put robot_com.py and audio_io.py under the src folder. robot_com.py supports command line IO to control your robot using natural English language. With the addition of audio_io.py, you are able to control your robot using voice!

@@ -193,6 +193,9 @@ class AnimateR2:
                 time.sleep(seconds)
 
     def askForColor(self, lightPosition = "both"):
+        if self.voice:
+            return False
+        
         if lightPosition != "both":
             print("We detect that you want to change your " + lightPosition + " light, but could not find a color.")
         else:

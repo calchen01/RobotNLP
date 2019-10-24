@@ -9,7 +9,7 @@ import numpy as np
 
 from client import DroidClient
 
-path = "/Volumes/SD/hw4_2019/"
+path = "/Users/calchen/Desktop/sphero-project/"
 vectors = Magnitude(path + "vectors/word2vecRetrofitted.magnitude")
 
 def loadTrainingSentences(file_path):
@@ -63,23 +63,24 @@ def getCommandType(categories, closestSentences, indexToTrainingSentence):
 
     return max(commandDict, key=commandDict.get)
 
-# R2D2 class
-class AnimateR2:
+class Robot:
     def __init__(self, droidID, wordSimilarityCutoff, voice):
         self.createSentenceEmbeddings()
 
         self.droid = DroidClient()
-        self.droid.connect_to_droid(droidID)
+        connected = self.droid.connect_to_droid(droidID)
+        while not connected:
+            connected = self.droid.connect_to_droid(droidID)
         self.name = "R2"
 
         self.wordSimilarityCutoff = wordSimilarityCutoff
-        self.voice = voice
 
         # color variables
         self.holoProjectorIntensity = 0
         self.logicDisplayIntensity = 0
         self.frontRGB = (0, 0, 0)
         self.backRGB = (0, 0, 0)
+        self.voice = voice
 
         self.colorToRGB = {}
         with open(path + 'data/colors.csv') as csvfile:
@@ -128,53 +129,33 @@ class AnimateR2:
         # print(self.indexToTrainingSentence[closestSentences[3]][0])
         # print(self.indexToTrainingSentence[closestSentences[4]][0])
 
-        if not self.voice:
-            print("Closet sentence was: " + self.indexToTrainingSentence[closestSentences[0]][0])
-            print("Its cosine similarity to the command was: " + str(cosineSim(commandEmbedding, self.sentenceEmbeddings[closestSentences[0], :])))
+        print("Closet sentence was: " + self.indexToTrainingSentence[closestSentences[0]][0])
+        print("Its cosine similarity to the command was: " + str(cosineSim(commandEmbedding, self.sentenceEmbeddings[closestSentences[0], :])))
 
-        if cosineSim(commandEmbedding, self.sentenceEmbeddings[closestSentences[0], :]) < 0.84:
-            if not self.voice:
-                subcommand = input(self.name + ": I could not understand your command. Do you want to add this command to the training set? (yes/no): ")
-                if "yes" in subcommand.lower():
-                    subcommand = input("What category do you want to add it to? Choices are state, direction, light, animation, head, or grid: ")
-                    subcommand = subcommand.lower()
-                    if subcommand in self.categories:
-                        with open(path + "data/r2d2TrainingSentences.txt", 'a') as the_file:
-                            the_file.write(subcommand + 'Sentences :: ' + command + '\n')
-                        print("Command added. Changes will be present on restart.")
-                    else:
-                        print(subcommand + " not a valid category.")
-            else:
-                superDumbVariable = True
-                # want to make it so the R2D2 goes like nuh huh, can't understand
+        if cosineSim(commandEmbedding, self.sentenceEmbeddings[closestSentences[0], :]) < 0.84 and not self.voice:
+            subcommand = input(self.name + ": I could not understand your command. Do you want to add this command to the training set? (yes/no): ")
+            if "yes" in subcommand.lower():
+                subcommand = input("What category do you want to add it to? Choices are state, direction, light, animation, head, or grid: ")
+                subcommand = subcommand.lower()
+                if subcommand in self.categories:
+                    with open(path + "data/r2d2TrainingSentences.txt", 'a') as the_file:
+                        the_file.write(subcommand + 'Sentences :: ' + command + '\n')
+                    print("Command added. Changes will be present on restart.")
+                else:
+                    print(subcommand + " not a valid category.")
             return
 
         commandType = getCommandType(self.categories, closestSentences, self.indexToTrainingSentence)
         result = getattr(self, commandType + "Parser")(command.lower())
-        if not self.voice:
-            if result:
-                print(self.name + ": Done executing "  + commandType + " command.")
-            else:
-                print(self.name + ": I could not understand your " + commandType + " command.")
-
-
-
-
-
-
+        if result:
+            print(self.name + ": Done executing "  + commandType + " command.")
+        else:
+            print(self.name + ": I could not understand your " + commandType + " command.")
 
     def roll(self, heading):
         self.droid.roll(0, self.dirMap.get(heading), 0)
         time.sleep(0.35)
         self.droid.roll(1, self.dirMap.get(heading), 0.62)
-
-    def animate(self):
-        # 55 animations available
-        self.droid.animate(random.randint(1, 55))
-
-    def play_sound(self):
-        # 49 sounds available
-        self.droid.play_sound(random.randint(1, 49))
 
     def reset(self):
         self.droid.roll(0, 0, 0)
@@ -193,9 +174,6 @@ class AnimateR2:
                 time.sleep(seconds)
 
     def askForColor(self, lightPosition = "both"):
-        if self.voice:
-            return False
-        
         if lightPosition != "both":
             print("We detect that you want to change your " + lightPosition + " light, but could not find a color.")
         else:
@@ -226,37 +204,6 @@ class AnimateR2:
                     superDumbVariable = 1
 
         return color
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def stateParser(self, command):
-        print("stateParser has not yet been initialized.")
-
-    def directionParser(self, command):
-        tokens = re.split("[^a-zA-Z]", command)
-        for token in tokens:
-            if token in {"up", "forward", "ahead", "straight"}:
-                self.roll("up")
-                return True
-            elif token in {"down", "back"}:
-                self.roll("down")
-                return True
-            elif token in {"left", "right"}:
-                self.roll(token)
-                return True
 
     def lightParser(self, command):
         # slot filler for lights
@@ -543,11 +490,51 @@ class AnimateR2:
 
         return False
 
+    def directionParser(self, command):
+        if re.search(r"\b(circle|donut)\b", command, re.I):
+            if re.search(r"\b(counter)\b", command, re.I):
+                self.roll("up")
+                self.roll("left")
+                self.roll("down")
+                self.roll("right")
+            else:
+                self.roll("up")
+                self.roll("right")
+                self.roll("down")
+                self.roll("left")
+            return True
+        else:
+            flag = False
+            tokens = re.split("[^a-zA-Z]", command)
+            for token in tokens:
+                if token in {"up", "forward", "ahead", "straight"}:
+                    self.roll("up")
+                    flag = True
+                elif token in {"down", "back"}:
+                    self.roll("down")
+                    flag = True
+                elif token in {"left", "right"}:
+                    self.roll(token)
+                    flag = True
+            return flag
+
+
     def animationParser(self, command):
-        print("animationParser has not yet been initialized.")
+        if re.search(r"\b(dance|move|moves)\b", command, re.I):
+            self.droid.animate(3)
+            return True
+        elif re.search(r"\b(sing|sound|sounds|noise|noises)\b", command, re.I):
+            self.droid.play_sound(2)
+            return True
+        return False
 
     def headParser(self, command):
         print("headParser has not yet been initialized.")
 
     def gridParser(self, command):
         print("gridParser has not yet been initialized.")
+
+    def stateParser(self, command):
+        print("stateParser has not yet been initialized.")
+
+    

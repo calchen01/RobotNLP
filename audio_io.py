@@ -149,27 +149,9 @@ def listen_execute_loop(responses, robot):
                 break
 
             # Process transcribed text command
-            tokens = re.split("[^a-zA-Z]", cmd)
-            if re.search(r"\b(light|lights|led|leds|backlight|backlights)\b", cmd, re.I):
-                if re.search(r"\b(front|forward)\b", cmd, re.I):
-                    robot.set_front_LED_color(tokens)
-                elif re.search(r"\b(back|rear|backlight|backlights)\b", cmd, re.I):
-                    robot.set_back_LED_color(tokens)
-                else:
-                    robot.set_front_LED_color(tokens)
-                    robot.set_back_LED_color(tokens)
-            else:
-                for token in tokens:
-                    if token in {"up", "forward", "ahead", "straight"}:
-                        robot.roll("up")
-                    elif token in {"down", "back"}:
-                        robot.roll("down")
-                    elif token in {"left", "right"}:
-                        robot.roll(token)
-                    elif token in {"dance", "move", "moves"}:
-                        robot.animate()
-                    elif token in {"sing", "sound", "sounds", "noise", "noises"}:
-                        robot.play_sound()
+            if len(cmd) == 0:
+                print("Please type something")
+            robot.inputCommand(cmd)
 
             print("\nSay your instruction: ")
             num_chars_printed = 0
@@ -179,12 +161,11 @@ def main():
     # for a list of supported languages.
 
     # Replace this with your own robot serial ID
-    robot = Robot("D2-F75E")
+    robot = Robot("D2-F75E", 0.70, True)
 
     language_code = "en-US" # a BCP-47 language tag
 
-    client = speech.SpeechClient().from_service_account_json(
-        "credentials.json")
+    client = speech.SpeechClient().from_service_account_json("credentials.json")
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=RATE,

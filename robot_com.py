@@ -7,9 +7,6 @@ import re
 from client import DroidClient
 from r2d2_commands import *
 
-__author__ = "Zhenghua (Calvin) Chen"
-__author__ = "John Zhang"
-
 # Uncomment the code below for command line IO, remember to recomment if you are using voice IO
 
 def main():
@@ -18,28 +15,17 @@ def main():
     print("***********************************************")
 
     # Replace this with your own robot serial ID
-    robot = AnimateR2('D2-152E', 0.70, False)
+    robot = Robot('D2-F75E', 0.70, False)
 
     while(True):
-        command = input("You: ")
-        command = command.strip()
+        command = input("You: ").lower()
+        if len(command) == 0:
+            print("Please type something")
         if re.search(r"\b(exit|quit|bye|goodbye)\b", command, re.I):
+            print('Exiting...')
             break
-
-        flag = False
-        tokens = re.split("[^a-zA-Z]", command.lower())
-        if len(tokens) == 0:
-            print("Please type something!")
-            continue
-        for token in tokens:
-            if token in {"dance", "move", "moves"}:
-                robot.animate()
-                flag = True
-            elif token in {"sing", "sound", "sounds", "noise", "noises"}:
-                robot.play_sound()
-                flag = True
-        if not flag:
-            robot.inputCommand(command)
+        robot.inputCommand(command)
+    robot.reset()
     robot.disconnect()
 
 if __name__ == "__main__":

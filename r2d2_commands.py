@@ -493,29 +493,58 @@ class Robot:
     def directionParser(self, command):
         if re.search(r"\b(circle|donut)\b", command, re.I):
             if re.search(r"\b(counter)\b", command, re.I):
-                self.roll("up")
-                self.roll("left")
-                self.roll("down")
-                self.roll("right")
+                for heading in range(360, 0, -30):
+                    self.droid.roll(self.speed, heading % 360, 0.6)
             else:
-                self.roll("up")
-                self.roll("right")
-                self.roll("down")
-                self.roll("left")
+                for heading in range(0, 360, 30):
+                    self.droid.roll(self.speed, heading, 0.6)
+            self.droid.roll(0, 0, 0)
+            return True
+        elif re.search(r"\b(square)\b", command, re.I):
+            if re.search(r"\b(counter)\b", command, re.I):
+                for heading in range(360, 0, -90):
+                    self.droid.roll(0, heading % 360, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, heading % 360, 0.6)
+            else:
+                for heading in range(0, 360, 90):
+                    self.droid.roll(0, heading, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, heading, 0.6)
+            self.droid.roll(0, 0, 0)
+            return True
+        elif re.search(r"\b(speed|faster|slower)\b", command, re.I):
+            if re.search(r"\b(increase|faster)\b", command, re.I):
+                self.speed += 0.25
+            else:
+                self.speed -= 0.25
+            self.droid.animate(1)
             return True
         else:
             flag = False
             tokens = re.split("[^a-zA-Z]", command)
             for token in tokens:
-                if token in {"up", "forward", "ahead", "straight"}:
-                    self.roll("up")
+                if token in {"up", "forward", "ahead", "straight", "north"}:
+                    self.droid.roll(0, 0, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 0, 0.6)
                     flag = True
-                elif token in {"down", "back"}:
-                    self.roll("down")
+                elif token in {"down", "back", "south"}:
+                    self.droid.roll(0, 180, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 180, 0.6)
                     flag = True
-                elif token in {"left", "right"}:
-                    self.roll(token)
+                elif token in {"left", "west"}:
+                    self.droid.roll(0, 270, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 270, 0.6)
                     flag = True
+                elif token in {"right", "east"}:
+                    self.droid.roll(0, 90, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 90, 0.6)
+                    flag = True
+            self.droid.roll(0, 0, 0)
             return flag
 
 
@@ -524,12 +553,30 @@ class Robot:
             self.droid.animate(3)
             return True
         elif re.search(r"\b(sing|sound|sounds|noise|noises)\b", command, re.I):
-            self.droid.play_sound(2)
+            self.droid.play_sound(3)
+            return True
+        elif re.search(r"\b(fall)\b", command, re.I):
+            self.droid.animate(14)
+            return True
+        elif re.search(r"\b(scream)\b", command, re.I):
+            self.droid.play_sound(7)
             return True
         return False
 
     def headParser(self, command):
-        print("headParser has not yet been initialized.")
+        if re.search(r"\b(left)\b", command, re.I):
+            self.droid.rotate_head(-90)
+            return True
+        elif re.search(r"\b(right)\b", command, re.I):
+            self.droid.rotate_head(90)
+            return True
+        elif re.search(r"\b(behind|back)\b", command, re.I):
+            self.droid.rotate_head(180)
+            return True
+        elif re.search(r"\b(forward|ahead)\b", command, re.I):
+            self.droid.rotate_head(0)
+            return True
+        return False
 
     def gridParser(self, command):
         print("gridParser has not yet been initialized.")

@@ -25,7 +25,6 @@ def main():
             print('Exiting...')
             break
         robot.inputCommand(command)
-    robot.reset()
     robot.disconnect()
 
 if __name__ == "__main__":

@@ -582,6 +582,29 @@ class Robot:
         print("gridParser has not yet been initialized.")
 
     def stateParser(self, command):
-        print("stateParser has not yet been initialized.")
-
-    
+        if re.search(r"\b(color)\b", command, re.I):
+            if re.search(r"\b(front|forward)\b", command, re.I):
+                print("***************")
+                print(self.frontRGB)
+                print("***************")
+            elif re.search(r"\b(back|rear)\b", command, re.I):
+                print("***************")
+                print(self.backRGB)
+                print("***************")
+            else:
+                print("***************")
+                print(self.frontRGB)
+                print(self.backRGB)
+                print("***************")
+            return True
+        elif re.search(r"\b(name)\b", command, re.I):
+            print("***************")
+            print(self.name)
+            print("***************")
+            return True
+        elif re.search(r"\b(power|battery)\b", command, re.I):
+            print("***************")
+            self.droid.battery()
+            print("***************")
+            return True
+        return False

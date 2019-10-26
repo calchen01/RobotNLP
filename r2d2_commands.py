@@ -66,16 +66,9 @@ def getCommandType(categories, closestSentences, indexToTrainingSentence):
 class Robot:
     def __init__(self, droidID, wordSimilarityCutoff, voice):
         self.createSentenceEmbeddings()
-
         self.droid = DroidClient()
-        connected = self.droid.connect_to_droid(droidID)
-        while not connected:
-            connected = self.droid.connect_to_droid(droidID)
         self.name = "R2"
-
         self.wordSimilarityCutoff = wordSimilarityCutoff
-
-        # color variables
         self.holoProjectorIntensity = 0
         self.logicDisplayIntensity = 0
         self.frontRGB = (0, 0, 0)
@@ -88,14 +81,9 @@ class Robot:
             for row in readCSV:
                 self.colorToRGB[row[0]] = (int(row[2]), int(row[3]), int(row[4]))
 
-        # direction variables
-        self.dirMap = {
-            "up": 0,
-            "right": 90,
-            "down": 180,
-            "left": 270
-        }
-
+        connected = self.droid.connect_to_droid(droidID)
+        while not connected:
+            connected = self.droid.connect_to_droid(droidID)
 
     def createSentenceEmbeddings(self):
         self.categories = ["state", "direction", "light", "animation", "head", "grid"]

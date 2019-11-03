@@ -74,6 +74,8 @@ class Robot:
         self.frontRGB = (0, 0, 0)
         self.backRGB = (0, 0, 0)
         self.voice = voice
+        self.grid = [[]]
+        self.speed = 0.5
 
         self.colorToRGB = {}
         with open(path + 'data/colors.csv') as csvfile:
@@ -501,7 +503,7 @@ class Robot:
                     self.droid.roll(self.speed, heading, 0.6)
             self.droid.roll(0, 0, 0)
             return True
-        elif re.search(r"\b(speed|faster|slower)\b", command, re.I):
+        elif re.search(r"\b(speed|faster|slower|slow)\b", command, re.I):
             if re.search(r"\b(increase|faster)\b", command, re.I):
                 self.speed += 0.25
             else:
@@ -567,7 +569,66 @@ class Robot:
         return False
 
     def gridParser(self, command):
-        print("gridParser has not yet been initialized.")
+        if re.search("\d+ (x|by) \d+", command):
+            print
+            arr = command.split()
+            ind = -1
+            for i in range(len(arr)):
+                if arr[i] == "x" or arr[i] == "by":
+                    ind = i
+            if ind != -1 and ind < len(arr) - 1:
+                x = int(arr[ind - 1])
+                y = int(arr[ind + 1])
+                self.grid = [["" for col in range(y)] for row in range(x)]
+                self.droid.animate(1)
+            print(self.grid)
+            return True
+        elif re.search("there is .+ at [(]?\d+,[ ]?\d+", command):
+            temp = re.split("[^a-zA-Z0-9]", command)
+            arr = []
+            for x in temp:
+                if x != "":
+                    arr.append(x)
+            ind1 = -1
+            ind2 = -1
+            for i in range(len(arr)):
+                if arr[i] == "is":
+                    ind1 = i
+                elif arr[i].isdigit():
+                    ind2 = i
+                    break
+            if ind1 != -1 and ind2 != -1:
+                if int(arr[ind2]) < 0 or int(arr[ind2]) >= len(self.grid) or int(arr[ind2 + 1]) < 0 or int(arr[ind2 + 1]) >= len(self.grid[0]):
+                    self.droid.play_sound(7)
+                    return False
+                else:
+                    self.grid[int(arr[ind2])][int(arr[ind2 + 1])] = arr[ind1 + 1]
+                    print(self.grid)
+            return True
+        elif re.search("go to [(]?\d+,[ ]?\d+", command):
+            temp = re.split("[^a-zA-Z0-9]", command)
+            arr = []
+            for x in temp:
+                if x != "":
+                    arr.append(x)
+            ind = -1
+            for i in range(len(arr)):
+                if arr[i].isdigit():
+                    ind = i
+                    break
+            if ind != -1:
+                if int(arr[ind]) < 0 or int(arr[ind]) >= len(self.grid) or int(arr[ind + 1]) < 0 or int(arr[ind + 1]) >= len(self.grid[0]):
+                    self.droid.play_sound(7)
+                    return False
+                else:
+                    print(int(arr[ind]), int(arr[ind + 1]))
+                    print(self.grid)
+            return True
+        return False
+        '''
+        elif command == "You are at ... (x, y)."
+            self.curr_pos = (x, y)
+        '''
 
     def stateParser(self, command):
         if re.search(r"\b(color)\b", command, re.I):

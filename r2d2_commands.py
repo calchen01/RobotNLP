@@ -1,6 +1,8 @@
 from pymagnitude import *
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from graph import *
+from a_star import *
 import random
 import time
 import csv
@@ -76,6 +78,7 @@ class Robot:
         self.voice = voice
         self.grid = [[]]
         self.speed = 0.5
+        self.pos = (-1, -1)
 
         self.colorToRGB = {}
         with open(path + 'data/colors.csv') as csvfile:
@@ -141,11 +144,6 @@ class Robot:
             print(self.name + ": Done executing "  + commandType + " command.")
         else:
             print(self.name + ": I could not understand your " + commandType + " command.")
-
-    def roll(self, heading):
-        self.droid.roll(0, self.dirMap.get(heading), 0)
-        time.sleep(0.35)
-        self.droid.roll(1, self.dirMap.get(heading), 0.62)
 
     def reset(self):
         self.droid.roll(0, 0, 0)
@@ -621,14 +619,56 @@ class Robot:
                     self.droid.play_sound(7)
                     return False
                 else:
+                    target = (int(arr[ind]), int(arr[ind + 1]))
+                    G = Graph(self.grid)
+                    moves = A_star(G, self.pos, target, manhattan_distance_heuristic)
+                    print("**************")
+                    print(moves)
+                    print("**************")
+                    for i in range(1, len(moves)):
+                        if moves[i][1] > moves[i - 1][1]:
+                            self.droid.roll(0, 0, 0)
+                            time.sleep(0.35)
+                            self.droid.roll(1, 0, 0.62)
+                        elif moves[i][1] < moves[i - 1][1]:
+                            self.droid.roll(0, 180, 0)
+                            time.sleep(0.35)
+                            self.droid.roll(1, 180, 0.62)
+                        elif moves[i][0] > moves[i - 1][0]:
+                            self.droid.roll(0, 90, 0)
+                            time.sleep(0.35)
+                            self.droid.roll(1, 90, 0.62)
+                        elif moves[i][0] < moves[i - 1][0]:
+                            self.droid.roll(0, 270, 0)
+                            time.sleep(0.35)
+                            self.droid.roll(1, 270, 0.62)
+                        self.pos = moves[i]
+                        if self.pos == target:
+                            break
+                    self.reset()
+                    self.pos = target
+            return True
+        elif re.search("you are at [(]?\d+,[ ]?\d+", command):
+            temp = re.split("[^a-zA-Z0-9]", command)
+            arr = []
+            for x in temp:
+                if x != "":
+                    arr.append(x)
+            ind = -1
+            for i in range(len(arr)):
+                if arr[i].isdigit():
+                    ind = i
+                    break
+            if ind != -1:
+                if int(arr[ind]) < 0 or int(arr[ind]) >= len(self.grid) or int(arr[ind + 1]) < 0 or int(arr[ind + 1]) >= len(self.grid[0]):
+                    self.droid.play_sound(7)
+                    return False
+                else:
                     print(int(arr[ind]), int(arr[ind + 1]))
-                    print(self.grid)
+                    self.pos = (int(arr[ind]), int(arr[ind + 1]))
+                    print(self.pos)
             return True
         return False
-        '''
-        elif command == "You are at ... (x, y)."
-            self.curr_pos = (x, y)
-        '''
 
     def stateParser(self, command):
         if re.search(r"\b(color)\b", command, re.I):

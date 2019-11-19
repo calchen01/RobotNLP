@@ -535,7 +535,6 @@ class Robot:
             self.droid.roll(0, 0, 0)
             return flag
 
-
     def animationParser(self, command):
         if re.search(r"\b(dance|move|moves)\b", command, re.I):
             self.droid.animate(3)
@@ -566,108 +565,137 @@ class Robot:
             return True
         return False
 
+    def extractCoord(self, arr):
+        ret = []
+        for x in arr:
+            if x.isdigit():
+                ret.append(int(x))
+                break
+        for i in range(len(arr) - 1, -1, -1):
+            if arr[i].isdigit():
+                ret.append(int(arr[i]))
+                break
+        return ret
+
+    def extractObj(self, arr):
+        ret = ""
+        ind1 = -1
+        ind2 = -1
+        for i in range(len(arr)):
+            if arr[i] in {"is", "are"}:
+                ind1 = i
+            elif arr[i] == "at":
+                ind2 = i
+        for i in range(ind1 + 1, ind2):
+            ret += arr[i]
+            ret += " "
+        return ret[:-1]
+
     def gridParser(self, command):
-        if re.search("\d+ (x|by) \d+", command):
-            print
-            arr = command.split()
-            ind = -1
-            for i in range(len(arr)):
-                if arr[i] == "x" or arr[i] == "by":
-                    ind = i
-            if ind != -1 and ind < len(arr) - 1:
-                x = int(arr[ind - 1])
-                y = int(arr[ind + 1])
-                self.grid = [["" for col in range(y)] for row in range(x)]
+        if re.search("\d+ ?(x|by) ?\d+", command):
+            arr = re.split("(x|[^a-zA-Z0-9])", command) # guaranteed to contain 2 numbers
+            x, y = self.extractCoord(arr)
+            self.grid = [["" for col in range(y)] for row in range(x)]
+            for row in self.grid:
+                print(row)
+            self.droid.animate(1)
+            return True
+        elif re.search("(is|are) .+ at [(]?\d+ ?, ?\d+", command):
+            arr = re.split("[^a-zA-Z0-9]", command) # guaranteed to contain 2 numbers
+            x, y = self.extractCoord(arr)
+            obj = self.extractObj(arr)
+            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                print("grid is not initialized yet")
+                self.droid.play_sound(7)
+                return False
+            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                print("coordinate is out of grid")
+                self.droid.play_sound(7)
+                return False
+            self.grid[x][y] = obj
+            for row in self.grid:
+                print(row)
+            self.droid.animate(1)
+            return True
+        elif re.search("you are at [(]?\d+ ?, ?\d+", command):
+            arr = re.split("[^a-zA-Z0-9]", command) # guaranteed to contain 2 numbers
+            x, y = self.extractCoord(arr)
+            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                print("grid is not initialized yet")
+                self.droid.play_sound(7)
+                return False
+            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                print("coordinate is out of grid")
+                self.droid.play_sound(7)
+                return False
+            self.pos = (x, y)
+            self.grid[x][y] = "you"
+            for row in self.grid:
+                print(row)
+            self.droid.animate(1)
+            return True
+        elif re.search("go to [(]?\d+ ?, ?\d+", command):
+            arr = re.split("[^a-zA-Z0-9]", command) # guaranteed to contain 2 numbers
+            x, y = self.extractCoord(arr)
+            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                print("grid is not initialized yet")
+                self.droid.play_sound(7)
+                return False
+            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                print("coordinate is out of grid")
+                self.droid.play_sound(7)
+                return False
+            if self.pos == (-1, -1):
+                print("current position hasn't been initialized")
+                return False
+            target = (x, y)
+            self.grid[x][y] = "target"
+            for row in self.grid:
+                print(row)
+            if target == self.pos:
+                print("you are already there")
                 self.droid.animate(1)
-            print(self.grid)
+                return True
+            G = Graph(self.grid)
+            moves = A_star(G, self.pos, target, manhattan_distance_heuristic)
+            if moves is None:
+                print("impossible to get to the target")
+                self.droid.play_sound(7)
+                return False
+            else:
+                print("**********************************************************************")
+                print(moves)
+                print("**********************************************************************")
+            init_x, init_y = self.pos
+            for i in range(1, len(moves)):
+                if moves[i][1] > moves[i - 1][1]:
+                    print("right")
+                    self.droid.roll(0, 90, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 90, 0.6)
+                elif moves[i][1] < moves[i - 1][1]:
+                    print("left")
+                    self.droid.roll(0, 270, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 270, 0.6)
+                elif moves[i][0] > moves[i - 1][0]:
+                    print("down")
+                    self.droid.roll(0, 180, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 180, 0.6)
+                elif moves[i][0] < moves[i - 1][0]:
+                    print("up")
+                    self.droid.roll(0, 0, 0)
+                    time.sleep(0.35)
+                    self.droid.roll(self.speed, 0, 0.6)
+                self.pos = moves[i]
+            self.grid[x][y] = "you"
+            self.grid[init_x][init_y] = ""
+            for row in self.grid:
+                print(row)
+            self.droid.animate(1)
             return True
-        elif re.search("there is .+ at [(]?\d+,[ ]?\d+", command):
-            temp = re.split("[^a-zA-Z0-9]", command)
-            arr = []
-            for x in temp:
-                if x != "":
-                    arr.append(x)
-            ind1 = -1
-            ind2 = -1
-            for i in range(len(arr)):
-                if arr[i] == "is":
-                    ind1 = i
-                elif arr[i].isdigit():
-                    ind2 = i
-                    break
-            if ind1 != -1 and ind2 != -1:
-                if int(arr[ind2]) < 0 or int(arr[ind2]) >= len(self.grid) or int(arr[ind2 + 1]) < 0 or int(arr[ind2 + 1]) >= len(self.grid[0]):
-                    self.droid.play_sound(7)
-                    return False
-                else:
-                    self.grid[int(arr[ind2])][int(arr[ind2 + 1])] = arr[ind1 + 1]
-                    print(self.grid)
-            return True
-        elif re.search("go to [(]?\d+,[ ]?\d+", command):
-            temp = re.split("[^a-zA-Z0-9]", command)
-            arr = []
-            for x in temp:
-                if x != "":
-                    arr.append(x)
-            ind = -1
-            for i in range(len(arr)):
-                if arr[i].isdigit():
-                    ind = i
-                    break
-            if ind != -1:
-                if int(arr[ind]) < 0 or int(arr[ind]) >= len(self.grid) or int(arr[ind + 1]) < 0 or int(arr[ind + 1]) >= len(self.grid[0]):
-                    self.droid.play_sound(7)
-                    return False
-                else:
-                    target = (int(arr[ind]), int(arr[ind + 1]))
-                    G = Graph(self.grid)
-                    moves = A_star(G, self.pos, target, manhattan_distance_heuristic)
-                    print("**************")
-                    print(moves)
-                    print("**************")
-                    for i in range(1, len(moves)):
-                        if moves[i][1] > moves[i - 1][1]:
-                            self.droid.roll(0, 0, 0)
-                            time.sleep(0.35)
-                            self.droid.roll(1, 0, 0.62)
-                        elif moves[i][1] < moves[i - 1][1]:
-                            self.droid.roll(0, 180, 0)
-                            time.sleep(0.35)
-                            self.droid.roll(1, 180, 0.62)
-                        elif moves[i][0] > moves[i - 1][0]:
-                            self.droid.roll(0, 90, 0)
-                            time.sleep(0.35)
-                            self.droid.roll(1, 90, 0.62)
-                        elif moves[i][0] < moves[i - 1][0]:
-                            self.droid.roll(0, 270, 0)
-                            time.sleep(0.35)
-                            self.droid.roll(1, 270, 0.62)
-                        self.pos = moves[i]
-                        if self.pos == target:
-                            break
-                    self.reset()
-                    self.pos = target
-            return True
-        elif re.search("you are at [(]?\d+,[ ]?\d+", command):
-            temp = re.split("[^a-zA-Z0-9]", command)
-            arr = []
-            for x in temp:
-                if x != "":
-                    arr.append(x)
-            ind = -1
-            for i in range(len(arr)):
-                if arr[i].isdigit():
-                    ind = i
-                    break
-            if ind != -1:
-                if int(arr[ind]) < 0 or int(arr[ind]) >= len(self.grid) or int(arr[ind + 1]) < 0 or int(arr[ind + 1]) >= len(self.grid[0]):
-                    self.droid.play_sound(7)
-                    return False
-                else:
-                    print(int(arr[ind]), int(arr[ind + 1]))
-                    self.pos = (int(arr[ind]), int(arr[ind + 1]))
-                    print(self.pos)
-            return True
+        self.droid.play_sound(7)
         return False
 
     def stateParser(self, command):

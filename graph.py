@@ -10,16 +10,16 @@ class Graph:
         for row in range(len(grid)):
             for col in range(len(grid[0])):
                 self.V.add((row, col))
-                if row - 1 >= 0 and grid[row][col] == "" and grid[row - 1][col] == "":
+                if row - 1 >= 0 and grid[row][col] in {"", "you", "target"} and grid[row - 1][col] in {"", "you", "target"}:
                     self.E.add(((row - 1, col), (row, col)))
                     self.E.add(((row, col), (row - 1, col)))
-                if row + 1 < len(grid) and grid[row][col] == "" and grid[row + 1][col] == "":
+                if row + 1 < len(grid) and grid[row][col] in {"", "you", "target"} and grid[row + 1][col] in {"", "you", "target"}:
                     self.E.add(((row + 1, col), (row, col)))
                     self.E.add(((row, col), (row + 1, col)))
-                if col - 1 >= 0 and grid[row][col] == "" and grid[row][col - 1] == "":
+                if col - 1 >= 0 and grid[row][col] in {"", "you", "target"} and grid[row][col - 1] in {"", "you", "target"}:
                     self.E.add(((row, col - 1), (row, col)))
                     self.E.add(((row, col), (row, col - 1)))
-                if col + 1 < len(grid[0]) and grid[row][col] == "" and grid[row][col + 1] == "":
+                if col + 1 < len(grid[0]) and grid[row][col] in {"", "you", "target"} and grid[row][col + 1] in {"", "you", "target"}:
                     self.E.add(((row, col + 1), (row, col)))
                     self.E.add(((row, col), (row, col + 1)))
                 

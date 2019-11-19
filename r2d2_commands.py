@@ -647,6 +647,7 @@ class Robot:
                 return False
             if self.pos == (-1, -1):
                 print("current position hasn't been initialized")
+                self.droid.play_sound(7)
                 return False
             target = (x, y)
             self.grid[x][y] = "target"

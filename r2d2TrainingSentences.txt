@@ -38,6 +38,7 @@ directionSentences :: Do a donut
 directionSentences :: Run in a circle
 directionSentences :: make a counter clockwise circle
 directionSentences :: Go ahead and turn right
+directionSentences :: increase your speed
 
 ## Light commands
 
@@ -70,15 +71,7 @@ animationSentences :: Sing for me
 
 headSentences :: turn your head to face forward
 headSentences :: turn your head to the left
-headSentences :: turn your head to the right
 headSentences :: look behind you
-headSentences :: look ahead
-headSentences :: look left
-headSentences :: look right
-headSentences :: look forward
-headSentences :: look to your left
-headSentences :: look to your right
-headSentences :: rotate your head
 
 ## Relationships on a grid.
 
@@ -90,6 +83,9 @@ gridSentences :: There is an obstacle at position 2,1.
 gridSentences :: There is a chair at position 3,3
 gridSentences :: Go to the left of the chair.
 gridSentences :: It’s not possible to go from 2,2 to 2,3.
+gridSentences :: Go back to 0,0
+gridSentences :: Go to 0,0
 
 ## The following new sentences were added when running R2D2
 
+gridSentences :: you are at 2, 2

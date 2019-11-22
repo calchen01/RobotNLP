@@ -61,4 +61,4 @@ Notes:
 3. Only a few commands are supported at the moment, including single move (e.g. "go straight"), sequential moves (e.g. "go straight and turn left"), dancing, making sound, changing color for one or both light(s), turning off one or both light(s).
 
 ## Link to Video Demo
-https://www.youtube.com/watch?v=BBKusMDKLw4
+https://vimeo.com/374821366

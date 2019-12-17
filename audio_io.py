@@ -167,7 +167,6 @@ def main():
 
     language_code = "en-US" # a BCP-47 language tag
 
-    # Replace this with your own Google Cloud Platform credentials file
     client = speech.SpeechClient().from_service_account_json("credentials.json")
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,

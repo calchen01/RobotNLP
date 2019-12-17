@@ -1,38 +1,62 @@
-import os
+import os, re
 
 '''
 This program merges all training sentences into a single txt file
 '''
 
-# Change the directory below which contains all txt files to be merged
+# Change the directory below which contains all the files to be merged
 directory = os.fsencode("/Users/calchen/Desktop/RobotNLP/merge")
-store = dict()
-store["stateSentences"] = set()
-store["directionSentences"] = set()
-store["lightSentences"] = set()
-store["animationSentences"] = set()
-store["headSentences"] = set()
-store["gridSentences"] = set()
 
-# Read & process all txt files
+# Given a line, extract the category
+def getCategory(line):
+    i = -1
+    while i < len(line):
+        if line[i] == "=" or line[i] == " ":
+            break
+        i += 1
+    return line[:i]
+
+# Given a line, extract all the training sentences
+def getSentences(line):
+    indexes = []
+    results = []
+    for i in range(len(line)):
+        if line[i] == "'" or line[i] == "\"":
+            indexes.append(i)
+    for i in range(1, len(indexes), 2):
+        results.append(line[indexes[0] + 1 : indexes[1]])
+    return results
+
+# A map storing all parsed results {category: set(training sentences)}
+store = dict() 
+
+# Extract and parse all training sentences from every file in the given directory
 for file in os.listdir(directory):
      filename = os.fsdecode(file)
-     if filename.endswith(".txt"): 
+     # Modify according to inputs
+     if filename.endswith(".py"):
         with open(filename) as fp:
             line = fp.readline()
+            category = ""
             while line:
-                arr = line.strip().split("::")
-                if len(arr) > 1:
-                    if arr[0].strip() in store:
-                        print("\"" + arr[0].strip() + "\" \"" + arr[1].strip() + "\"")
-                        store[arr[0].strip()].add(arr[1].strip())
+                # Modify according to inputs
+                if re.search(".*sentences ?= ?\[", line):
+                    category = getCategory(line)
+                    if category != "" and category not in store:
+                        store[category] = set()
+                if category != "":
+                    if len(getSentences(line)) > 0:
+                        for sentence in getSentences(line):
+                            store[category].add(sentence)
+                    if re.search(".*]", line):
+                        category = ""
                 line = fp.readline()
 
-# Write the merged results into a single txt file
+# Create the target file which contains processed results
 fo = open("r2d2TrainingSentences.txt", "w")
 for category in store:
-    if len(store[category]) > 0:
-        for sentence in store[category]:
-            fo.write(category + " :: " + sentence + "\n")
-        fo.write("\n")
+    for sentence in store[category]:
+        fo.write(category + " :: " + sentence + "\n")
+    fo.write("\n")
+# Close the target file
 fo.close()

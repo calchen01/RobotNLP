@@ -15,7 +15,6 @@ from six.moves import queue
 from robot_com import *
 
 # Adapted from https://cloud.google.com/speech-to-text/docs/streaming-recognize
-__author__ = "Zhenghua (Calvin) Chen"
 
 # Audio recording parameters
 RATE = 16000
@@ -139,19 +138,18 @@ def listen_execute_loop(responses, robot):
 
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
-            if re.search(r"\b(exit|quit|bye|goodbye)\b", cmd, re.I):
-                print('Exiting...')
-
+            if re.search(".*(exit|quit|bye|goodbye).*", cmd):
+                print("Exiting...")
                 # Reset and disconnect the robot
                 robot.reset()
                 robot.disconnect()
-
                 break
 
-            # Process transcribed text command
+            # Process finalized transcribed text command
             if len(cmd) == 0:
-                print("Please type something")
-            robot.inputCommand(cmd)
+                print("Please say something")
+            else:
+                robot.inputCommand(cmd)
 
             print("\nSay your instruction: ")
             num_chars_printed = 0
@@ -160,11 +158,16 @@ def main():
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
 
-    # Replace this with your own robot serial ID
+    # 1st param: replace this with your own robot ID
+    # 2nd param: wordSimilarityCutoff, range: 0.0 - 1.0. A higher value means we are more
+    #  confident about the prediction but it also rejects sentences which we are less
+    #  confident about
+    # 3rd param: voiceIO?
     robot = Robot("D2-F75E", 0.70, True)
 
     language_code = "en-US" # a BCP-47 language tag
 
+    # Replace this with your own Google Cloud Platform credentials file
     client = speech.SpeechClient().from_service_account_json("credentials.json")
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,

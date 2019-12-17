@@ -2,29 +2,28 @@
 Allow user to control robot using natural English language via command line IO
 """
 
-import random
-import re
+import random, re
 from client import DroidClient
 from r2d2_commands import *
 
-# Uncomment the code below for command line IO, remember to recomment if you are using voice IO
-
 def main():
-    print("Welcome to CommandDroid, where we will try our best to understand what you want our R2D2 to do.")
-    print("In this environment, type 'exit', 'quit', 'bye', or 'goodbye' to quit.")
-    print("***********************************************")
-
-    # Replace this with your own robot serial ID
+    # 1st param: replace this with your own robot ID
+    # 2nd param: wordSimilarityCutoff, range: 0.0 - 1.0. A higher value means we are more
+    #  confident about the prediction but it also rejects sentences which we are less
+    #  confident about
+    # 3rd param: voiceIO?
     robot = Robot('D2-F75E', 0.70, False)
 
-    while(True):
-        command = input("You: ").lower()
-        if len(command) == 0:
-            print("Please type something")
-        if re.search(r"\b(exit|quit|bye|goodbye)\b", command, re.I):
+    while True:
+        cmd = input("Please enter your instruction: ").lower()
+        if re.search(".*(exit|quit|bye|goodbye).*", cmd):
             print('Exiting...')
             break
-        robot.inputCommand(command)
+        if len(cmd) == 0:
+            print("Please enter something")
+        else:
+            robot.inputCommand(cmd)
+    robot.reset()
     robot.disconnect()
 
 if __name__ == "__main__":

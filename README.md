@@ -12,9 +12,7 @@ To run command line IO, you need to install matplotlib:
 pip3 install matplotlib
 ```
 
-???
-You also need to uncomment code in robot_com.py, change the robot serial ID with your own, start the server in one Terminal, cd into the src folder in another Terminal and type:
-???
+Next, change the robot ID with your own in line 15 of robot_com.py. Start the server in one Terminal session, cd into the src folder in another Terminal session and type:
 ```
 python3 robot_com.py
 ```
@@ -27,9 +25,7 @@ pip3 install pyaudio
 
 Next, you need an account with Google Cloud Platform (GCP). When you register a new account, you'll get $300 of free credits. You need to enable the speech-to-text module, set up a new project and service account in your GCP account and get a service account key file (this is going to be in .json format). Rename it "credentials.json" and put it under the src folder. You may also need to install and set up Google Cloud SDK locally. Look up GCP's documentation for more details.
 
-Change the robot ID with your own in audio_io.py in line 166.
-
-To run voice IO, you need to start the server in one Terminal, cd into the src folder in another Terminal and type:
+Next, change the robot ID with your own in line 166 of audio_io.py. Start the server in one Terminal session, cd into the src folder in another Terminal session and type:
 ```
 python3 audio_io.py
 ```

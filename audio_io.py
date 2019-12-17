@@ -102,7 +102,7 @@ def listen_execute_loop(responses, robot):
     finalized transcriptions are executed.
     """
 
-    print("\nSay your instruction: ")
+    print("\nPlease say your instruction: ")
 
     num_chars_printed = 0
     for response in responses:
@@ -151,7 +151,7 @@ def listen_execute_loop(responses, robot):
             else:
                 robot.inputCommand(cmd)
 
-            print("\nSay your instruction: ")
+            print("\nPlease say your instruction: ")
             num_chars_printed = 0
 
 def main():

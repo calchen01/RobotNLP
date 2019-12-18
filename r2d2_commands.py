@@ -499,8 +499,8 @@ class Robot:
 
     # Parser for a directional command
     def directionParser(self, command):
-        if re.search(r"\b(circle|donut)\b", command, re.I):
-            if re.search(r"\b(counter)\b", command, re.I):
+        if re.search(".*(circle|donut).*", command):
+            if re.search(".*counter.*", command):
                 for heading in range(360, 0, -30):
                     self.droid.roll(self.speed, heading % 360, 0.6)
             else:
@@ -508,8 +508,8 @@ class Robot:
                     self.droid.roll(self.speed, heading, 0.6)
             self.droid.roll(0, 0, 0)
             return True
-        elif re.search(r"\b(square)\b", command, re.I):
-            if re.search(r"\b(counter)\b", command, re.I):
+        elif re.search(".*square.*", command):
+            if re.search(".*counter.*", command):
                 for heading in range(360, 0, -90):
                     self.droid.roll(0, heading % 360, 0)
                     time.sleep(0.35)
@@ -521,11 +521,13 @@ class Robot:
                     self.droid.roll(self.speed, heading, 0.6)
             self.droid.roll(0, 0, 0)
             return True
-        elif re.search(r"\b(speed|faster|slower|slow)\b", command, re.I):
-            if re.search(r"\b(increase|faster)\b", command, re.I):
-                self.speed += 0.25
+        elif re.search(".*(speed|slow|faster|slower).*", command):
+            if re.search(".*(increase|faster|up).*", command):
+                if self.speed <= 0.75:
+                    self.speed += 0.25
             else:
-                self.speed -= 0.25
+                if self.speed >= 0.5:
+                    self.speed -= 0.25
             self.droid.animate(1)
             return True
         else:
@@ -557,33 +559,69 @@ class Robot:
 
     # Parser for a animation command
     def animationParser(self, command):
-        if re.search(r"\b(dance|move|moves)\b", command, re.I):
-            self.droid.animate(3)
-            return True
-        elif re.search(r"\b(sing|sound|sounds|noise|noises)\b", command, re.I):
-            self.droid.play_sound(3)
-            return True
-        elif re.search(r"\b(fall)\b", command, re.I):
+        if re.search(".*fall.*", command):
             self.droid.animate(14)
             return True
-        elif re.search(r"\b(scream)\b", command, re.I):
+        elif re.search(".*run away.*", command):
+            self.droid.animate(19)
+            return True
+        elif re.search(".*(dance|move).*", command):
+            self.droid.animate(20)
+            return True
+
+        elif re.search(".*(sing|sound|noise).*", command):
+            self.droid.play_sound(3)
+            return True
+        elif re.search(".*scream.*", command):
             self.droid.play_sound(7)
             return True
+
         return False
 
     # Parser for a head command
     def headParser(self, command):
-        if re.search(r"\b(left)\b", command, re.I):
+        if re.search(".*(forward|ahead|straight|front).*", command):
+            self.droid.rotate_head(0)
+            return True
+        elif re.search(".*left.*", command):
             self.droid.rotate_head(-90)
             return True
-        elif re.search(r"\b(right)\b", command, re.I):
+        elif re.search(".*right.*", command):
             self.droid.rotate_head(90)
             return True
-        elif re.search(r"\b(behind|back)\b", command, re.I):
+        elif re.search(".*(behind|back).*", command):
             self.droid.rotate_head(180)
             return True
-        elif re.search(r"\b(forward|ahead)\b", command, re.I):
-            self.droid.rotate_head(0)
+        return False
+
+    # checked above
+
+    # Parser for a state command
+    def stateParser(self, command):
+        if re.search(".*(color).*", command):
+            if re.search(".*(front|forward).*", command):
+                print("***************")
+                print(self.frontRGB)
+                print("***************")
+            elif re.search(".*(back|rear).*", command):
+                print("***************")
+                print(self.backRGB)
+                print("***************")
+            else:
+                print("***************")
+                print(self.frontRGB)
+                print(self.backRGB)
+                print("***************")
+            return True
+        elif re.search(".*(name).*", command):
+            print("***************")
+            print(self.name)
+            print("***************")
+            return True
+        elif re.search(".*(power|battery).*", command):
+            print("***************")
+            self.droid.battery()
+            print("***************")
             return True
         return False
 
@@ -720,33 +758,4 @@ class Robot:
             self.droid.animate(1)
             return True
         self.droid.play_sound(7)
-        return False
-
-    # Parser for a state command
-    def stateParser(self, command):
-        if re.search(r"\b(color)\b", command, re.I):
-            if re.search(r"\b(front|forward)\b", command, re.I):
-                print("***************")
-                print(self.frontRGB)
-                print("***************")
-            elif re.search(r"\b(back|rear)\b", command, re.I):
-                print("***************")
-                print(self.backRGB)
-                print("***************")
-            else:
-                print("***************")
-                print(self.frontRGB)
-                print(self.backRGB)
-                print("***************")
-            return True
-        elif re.search(r"\b(name)\b", command, re.I):
-            print("***************")
-            print(self.name)
-            print("***************")
-            return True
-        elif re.search(r"\b(power|battery)\b", command, re.I):
-            print("***************")
-            self.droid.battery()
-            print("***************")
-            return True
         return False

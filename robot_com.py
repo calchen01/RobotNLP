@@ -23,7 +23,7 @@ def main():
             print("Please enter something")
         else:
             robot.inputCommand(cmd)
-    robot.reset()
+    # Disconnect the robot
     robot.disconnect()
 
 if __name__ == "__main__":

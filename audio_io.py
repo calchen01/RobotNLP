@@ -140,8 +140,7 @@ def listen_execute_loop(responses, robot):
             # one of our keywords.
             if re.search(".*(exit|quit|bye|goodbye).*", cmd):
                 print("Exiting...")
-                # Reset and disconnect the robot
-                robot.reset()
+                # Disconnect the robot
                 robot.disconnect()
                 break
 

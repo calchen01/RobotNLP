@@ -17,8 +17,6 @@ directionSentences :: North is at heading 50 degrees.
 directionSentences :: Go North.
 directionSentences :: Go East.
 directionSentences :: Go South-by-southeast
-directionSentences :: Run away!
-directionSentences :: There’s a storm trooper to your left!  Run away from the storm trooper!
 directionSentences :: Turn to heading 30 degrees.
 directionSentences :: Reset your heading to 0
 directionSentences :: Turn to face North.
@@ -58,7 +56,9 @@ lightSentences :: Change the color on both LEDs to be green.
 
 ## Animations/sound
 
-animationSentences :: Fall over
+animationSentences :: fall over
+animationSentences :: Run away!
+animationSentences :: There’s a storm trooper to your left!  Run away from the storm trooper!
 animationSentences :: Scream
 animationSentences :: Make some noise
 animationSentences :: Laugh
@@ -72,6 +72,9 @@ animationSentences :: Sing for me
 headSentences :: turn your head to face forward
 headSentences :: turn your head to the left
 headSentences :: look behind you
+headSentences :: look forward
+headSentences :: look ahead
+headSentences :: look back
 
 ## Relationships on a grid.
 

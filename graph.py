@@ -1,15 +1,16 @@
 from collections import defaultdict
 
+# This class will be used by r2d2_commands.py for navigation
 class Graph:
-
     def __init__(self, grid):
-        
-        self.V = set()
-        self.E = set()
+        self.V = set() # Set of vertices, a vertex is a coordinate in our grid
+        self.E = set() # Set of edges, an edge connects two vertices
 
         for row in range(len(grid)):
             for col in range(len(grid[0])):
-                self.V.add((row, col))
+                self.V.add((row, col)) # Add the coordinate to the set of vertices
+                # Add the edge connecting the start and target vertices (both directions) to the set of edges
+                # if the target vertex is in the grid and both the start and target vertices are not obstacles
                 if row - 1 >= 0 and grid[row][col] in {"", "you", "target"} and grid[row - 1][col] in {"", "you", "target"}:
                     self.E.add(((row - 1, col), (row, col)))
                     self.E.add(((row, col), (row - 1, col)))

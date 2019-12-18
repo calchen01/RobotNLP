@@ -5,7 +5,9 @@ https://vimeo.com/374821366
 
 ## Instructions to Set up
 
-Put robot_com.py and audio_io.py under the src folder. robot_com.py supports command line IO to control your robot using natural English language. With the addition of audio_io.py, you are able to control your robot using voice!
+Put all .py files inside the src folder. Put "data" and "vectors" folders inside your project folder, parallel to the src folder. Put your .magnitude file inside the "vectors" folder.
+
+robot_com.py supports command line IO to control your robot using natural English language. With the addition of audio_io.py, you are able to control your robot using voice!
 
 To run command line IO, you need to install matplotlib:
 ```
@@ -57,3 +59,31 @@ Or for voice IO, type:
 ```
 python3 audio_io.py
 ```
+
+## Example Commands
+1. Make a circle
+2. Run in a counter clockwise square
+3. Turn you front/back/rear light <color>
+4. What color is your front/back/rear light?
+5. What’s your name?
+6. Directional commands like “go straight, come back and turn left”
+7. Dance/sing for me
+8. Make some noise/moves
+9. You are on a a by b grid
+10. You are at a, b
+11. There is … at a, b
+12. Go to a, b
+13. Fall
+14. What’s your battery status?
+15. Increase/decrease your speed
+16. Scream
+17. Turn your head to face left/right
+18. Look behind you
+19. Quit
+
+## Training files merger
+Inside the merge folder, you can find merge.py. If you put students' .py files inside the merge folder and call
+```
+python3 merge.py
+```
+A new file "r2d2TrainingSentences.txt" will be generated, which contains the merged training data from all students' .py files. The results are sorted according to categories and duplicates are removed.

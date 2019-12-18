@@ -1,20 +1,22 @@
 from queue import PriorityQueue
 from collections import defaultdict
 from math import sqrt
+
+# This program, along with graph.py, will be used by r2d2_commands.py for navigation
+
 inf = float('inf')
 
 def null_heuristic(u, v):
     return 0
 
 def manhattan_distance_heuristic(u, v):
-    return sum(abs(x1-x2) for x1,x2 in zip(u,v))
+    return sum(abs(x1 - x2) for x1, x2 in zip(u, v))
 
 def euclidean_distance_heuristic(u, v):
-    return sqrt(sum((x1-x2)**2 for x1,x2 in zip(u,v)))
+    return sqrt(sum((x1 - x2) ** 2 for x1, x2 in zip(u, v)))
 
 # adapted from https://en.wikipedia.org/wiki/A*_search_algorithm#Pseudocode
 def A_star(G, start, goal, heuristic=null_heuristic):
-
     closedSet = set()
     openSet = set([start])
     frontier = PriorityQueue()
@@ -64,4 +66,3 @@ def reconstruct_path(start, goal, parent):
         current = parent[current]
         path.append(current)
     return path[::-1]
-

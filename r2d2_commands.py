@@ -3,70 +3,78 @@ from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
 from graph import *
 from a_star import *
-import random
-import time
-import csv
-import re
+from client import DroidClient
+import random, time, csv, re
 import numpy as np
 
-from client import DroidClient
-
+# Change this path to where you put your project folder
 path = "/Users/calchen/Desktop/sphero-project/"
+# Change this path to / name of your .magnitude file.
+# Do not merge this line with the previous line.
 vectors = Magnitude(path + "vectors/word2vecRetrofitted.magnitude")
 
+############################################################
+# Helper Function
+############################################################
+# Load and process training sentences
 def loadTrainingSentences(file_path):
     commandTypeDict = {}
-
-    with open(file_path, 'r') as fin:
+    with open(file_path, "r") as fin:
         for line in fin:
-            line = line.rstrip('\n')
+            line = line.rstrip("\n")
             if len(line.strip()) == 0 or "##" == line.strip()[0:2]:
                 continue
-            commandType, command = line.split(' :: ')
+            commandType, command = line.split(" :: ")
             if commandType not in commandTypeDict:
                 commandTypeDict[commandType] = [command]
             else:
                 commandTypeDict[commandType].append(command)
-
     return commandTypeDict
 
+############################################################
+# Classification / Intent Detection
+############################################################
+# Calculate the cosine similarity between two vectors
 def cosineSim(vector1, vector2):
-    return np.dot(vector1, vector2)/(np.linalg.norm(vector1) * np.linalg.norm(vector2))
+    return np.dot(vector1, vector2) / (np.linalg.norm(vector1) * np.linalg.norm(vector2))
 
+# Given a sentence, calculate its embedding
 def calcPhraseEmbedding(sentence):
-    words = re.split('\W+', sentence)
+    words = re.split("\W+", sentence)
     words = [x.lower() for x in words if x.lower() not in ["", "a", "an", "the", "is"]]
     if "?" in sentence:
         words.append("?")
     return vectors.query(words).sum(axis = 0) / len(words)
 
+# Given a sentence embedding, rank training sentence embeddings
+# according to their similarity to the given sentence embedding
 def rankSentences(commandEmbedding, sentenceEmbeddings):
     sortList = []
-
     for i in range(sentenceEmbeddings.shape[0]):
         similarity = cosineSim(commandEmbedding, sentenceEmbeddings[i, :])
         sortList.append((i, similarity))
-
     similarSentences = sorted(sortList, key = lambda x: x[1], reverse = True)
-
     return [x[0] for x in similarSentences]
 
+# Classify a given sentence
 def getCommandType(categories, closestSentences, indexToTrainingSentence):
     commandDict = {}
     for category in categories:
         commandDict[category] = 0
-
     commandDict[indexToTrainingSentence[closestSentences[0]][1]] += 1
     commandDict[indexToTrainingSentence[closestSentences[1]][1]] += 0.5
     commandDict[indexToTrainingSentence[closestSentences[2]][1]] += 0.5
     commandDict[indexToTrainingSentence[closestSentences[3]][1]] += 0.2
     commandDict[indexToTrainingSentence[closestSentences[4]][1]] += 0.2
     print(commandDict)
+    return max(commandDict, key = commandDict.get)
 
-    return max(commandDict, key=commandDict.get)
-
+############################################################
+# Parsers / Slot Filling
+############################################################
 class Robot:
     def __init__(self, droidID, wordSimilarityCutoff, voice):
+        # Initialize instance variables
         self.createSentenceEmbeddings()
         self.droid = DroidClient()
         self.name = "R2"
@@ -80,40 +88,40 @@ class Robot:
         self.speed = 0.5
         self.pos = (-1, -1)
 
+        # Load and process color data
         self.colorToRGB = {}
-        with open(path + 'data/colors.csv') as csvfile:
-            readCSV = csv.reader(csvfile, delimiter=',')
+        with open(path + "data/colors.csv") as csvfile:
+            readCSV = csv.reader(csvfile, delimiter = ",")
             for row in readCSV:
                 self.colorToRGB[row[0]] = (int(row[2]), int(row[3]), int(row[4]))
 
+        # Connect to robot
         connected = self.droid.connect_to_droid(droidID)
         while not connected:
             connected = self.droid.connect_to_droid(droidID)
 
+    # Create training sentence embeddings
     def createSentenceEmbeddings(self):
         self.categories = ["state", "direction", "light", "animation", "head", "grid"]
         trainingSentences = loadTrainingSentences(path + "data/r2d2TrainingSentences.txt")
 
         self.indexToTrainingSentence = {}
-
         i = 0
         for category in self.categories:
             sentences = trainingSentences[category + "Sentences"]
             for sentence in sentences:
                 self.indexToTrainingSentence[i] = (sentence, category)
                 i += 1
-
         self.sentenceEmbeddings = np.zeros((len(self.indexToTrainingSentence), vectors.dim))
 
         for i in range(len(self.indexToTrainingSentence)):
             sentence = self.indexToTrainingSentence[i][0]
             sentenceEmbedding = calcPhraseEmbedding(sentence)
-
             self.sentenceEmbeddings[i, :] = sentenceEmbedding
 
+    # Process user's input command
     def inputCommand(self, command):
         commandEmbedding = calcPhraseEmbedding(command)
-
         closestSentences = rankSentences(commandEmbedding, self.sentenceEmbeddings)
 
         # print(self.indexToTrainingSentence[closestSentences[0]][0])
@@ -131,8 +139,8 @@ class Robot:
                 subcommand = input("What category do you want to add it to? Choices are state, direction, light, animation, head, or grid: ")
                 subcommand = subcommand.lower()
                 if subcommand in self.categories:
-                    with open(path + "data/r2d2TrainingSentences.txt", 'a') as the_file:
-                        the_file.write(subcommand + 'Sentences :: ' + command + '\n')
+                    with open(path + "data/r2d2TrainingSentences.txt", "a") as the_file:
+                        the_file.write(subcommand + "Sentences :: " + command + "\n")
                     print("Command added. Changes will be present on restart.")
                 else:
                     print(subcommand + " not a valid category.")
@@ -145,12 +153,15 @@ class Robot:
         else:
             print(self.name + ": I could not understand your " + commandType + " command.")
 
+    # Reset the robot to its initial orientation
     def reset(self):
         self.droid.roll(0, 0, 0)
 
+    # Disconnect from the robot
     def disconnect(self):
         self.droid.disconnect()
 
+    # Flash given light(s) in given color(s) for a given amount of time
     def flash_colors(self, colors, seconds = 1, front = True):
         if front:
             for color in colors:
@@ -161,6 +172,7 @@ class Robot:
                 self.droid.set_back_LED_color(*color)
                 time.sleep(seconds)
 
+    # If we can't detect the color for the light(s), ask the user for more info
     def askForColor(self, lightPosition = "both"):
         if lightPosition != "both":
             print("We detect that you want to change your " + lightPosition + " light, but could not find a color.")
@@ -172,7 +184,7 @@ class Robot:
             print("You may have inputted a color, but it is not in our database or is mispelled. Please input a color or rgb tuple.")
             command = input("If you want to add the color to the database, input color_name (one string) :: rgb tuple: ")
 
-            words = re.split('\W+', command)
+            words = re.split("\W+", command)
             words = [x for x in words if x != ""]
             for word in words:
                 if word in self.colorToRGB: color = self.colorToRGB[word]
@@ -180,8 +192,8 @@ class Robot:
                 try:
                     color = (int(words[1]), int(words[2]), int(words[3]))
                     colorName = words[0]
-                    with open(path + 'data/colors.csv', 'a') as csvStorer:
-                        csvStorer.write('\n' + colorName + ',R2D2 ' + colorName + ',' + words[1] + ',' + words[2] + ',' + words[3])
+                    with open(path + "data/colors.csv", "a") as csvStorer:
+                        csvStorer.write("\n" + colorName + ",R2D2 " + colorName + "," + words[1] + "," + words[2] + "," + words[3])
                     print(colorName + " added to database. It will be available on the next restart.")
                 except ValueError:
                     superDumbVariable = 1
@@ -190,11 +202,11 @@ class Robot:
                     color = (int(words[0]), int(words[1]), int(words[2]))
                 except ValueError:
                     superDumbVariable = 1
-
         return color
 
+    # Parser for a light command
     def lightParser(self, command):
-        # slot filler for lights
+        # Slots for a light command
         slots = {"holoEmit": False, "logDisp": False, "lights": [], "add": False, "sub": False,
         "percent": False, "whichRGB": [], "colors": [], "intensities": [], "rgb": False, "increment/seconds": False}
 
@@ -202,12 +214,10 @@ class Robot:
             slots["holoEmit"] = True
         if "logic display" in command:
             slots["logDisp"] = True
-
         if "dim" in command:
             slots["intensities"].append("dim")
         if "blink" in command:
             slots["intensities"].append("blink")
-
         if "%" in command:
             slots["percent"] = True
 
@@ -217,7 +227,7 @@ class Robot:
         if "decrease" in command or "reduce" in command or "subtract" in command:
             slots["sub"] = True
 
-        # front back too similar
+        # Front / back too similar
         if "back" in command:
             slots["lights"].append("back")
         if "front" in command:
@@ -232,7 +242,7 @@ class Robot:
         if "blue" in command:
             slots["whichRGB"].append("blue")
 
-        words = re.split('\W+', command)
+        words = re.split("\W+", command)
         words = [x for x in words if x != ""]
 
         i = 0
@@ -260,6 +270,7 @@ class Robot:
 
         return self.lightSlotsToActions(slots)
 
+    # Execute a light command given its slots
     def lightSlotsToActions(self, slots):
         if slots["holoEmit"]:
             if "off" in slots["intensities"]:
@@ -272,7 +283,7 @@ class Robot:
                 self.holoProjectorIntensity = 1
                 self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             elif "blink" in slots["intensities"]:
-                self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1)%2)
+                self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1) % 2)
                 time.sleep(0.3)
                 self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             else:
@@ -290,7 +301,7 @@ class Robot:
                 self.logicDisplayIntensity = 1
                 self.droid.set_logic_display_intensity(self.logicDisplayIntensity)
             elif "blink" in slots["intensities"]:
-                self.droid.set_logic_display_intensity((self.logicDisplayIntensity + 1)%2)
+                self.droid.set_logic_display_intensity((self.logicDisplayIntensity + 1) % 2)
                 time.sleep(0.3)
                 self.droid.set_logic_display_intensity(self.logicDisplayIntensity)
             else:
@@ -314,27 +325,31 @@ class Robot:
 
             if len(slots["whichRGB"]) == 0:
                 command = input("Did not find what values (red/blue/green) to change, input what values to change: ")
-                if "red" in command: slots["whichRGB"].append("red")
-                if "green" in command: slots["whichRGB"].append("green")
-                if "blue" in command: slots["whichRGB"].append("blue")
+                if "red" in command:
+                    slots["whichRGB"].append("red")
+                if "green" in command:
+                    slots["whichRGB"].append("green")
+                if "blue" in command:
+                    slots["whichRGB"].append("blue")
 
-            if len(slots["whichRGB"]) == 0: return False
+            if len(slots["whichRGB"]) == 0:
+                return False
 
             if "red" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (max(0, min(rgb[0] + rgb[0]*percent/100, 255)), rgb[1], rgb[2]))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (max(0, min(rgb[0] + rgb[0] * percent / 100, 255)), rgb[1], rgb[2]))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
             if "green" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (rgb[0], max(0, min(rgb[1] + rgb[1]*percent/100, 255)), rgb[2]))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (rgb[0], max(0, min(rgb[1] + rgb[1] * percent / 100, 255)), rgb[2]))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
             if "blue" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (rgb[0], rgb[1], max(0, min(rgb[2] + rgb[2]*percent/100, 255))))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (rgb[0], rgb[1], max(0, min(rgb[2] + rgb[2] * percent / 100, 255))))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
 
             return True
 
@@ -348,33 +363,38 @@ class Robot:
                 except ValueError:
                     return False
 
-            if slots["sub"]: slots["increment/seconds"] = -slots["increment/seconds"]
+            if slots["sub"]:
+                slots["increment/seconds"] = -slots["increment/seconds"]
 
             increaseValue = slots["increment/seconds"]
 
             if len(slots["whichRGB"]) == 0:
                 command = input("Did not find what values (red/blue/green) to change, input what values to change: ")
-                if "red" in command: slots["whichRGB"].append("red")
-                if "green" in command: slots["whichRGB"].append("green")
-                if "blue" in command: slots["whichRGB"].append("blue")
+                if "red" in command:
+                    slots["whichRGB"].append("red")
+                if "green" in command:
+                    slots["whichRGB"].append("green")
+                if "blue" in command:
+                    slots["whichRGB"].append("blue")
 
-            if len(slots["whichRGB"]) == 0: return False
+            if len(slots["whichRGB"]) == 0:
+                return False
 
             if "red" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (max(0, min(rgb[0] + increaseValue, 255)), rgb[1], rgb[2]))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (max(0, min(rgb[0] + increaseValue, 255)), rgb[1], rgb[2]))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
             if "green" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (rgb[0], max(0, min(rgb[1] + increaseValue, 255)), rgb[2]))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (rgb[0], max(0, min(rgb[1] + increaseValue, 255)), rgb[2]))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
             if "blue" in slots["whichRGB"]:
                 for light in lights:
-                    rgb = getattr(self, light+"RGB")
-                    setattr(self, light+"RGB", (rgb[0], rgb[1], max(0, min(rgb[2] + increaseValue, 255))))
-                    getattr(self.droid, "set_"+light+"_LED_color")(*getattr(self, light+"RGB"))
+                    rgb = getattr(self, light + "RGB")
+                    setattr(self, light + "RGB", (rgb[0], rgb[1], max(0, min(rgb[2] + increaseValue, 255))))
+                    getattr(self.droid, "set_" + light + "_LED_color")(*getattr(self, light + "RGB"))
 
             return True
 
@@ -395,7 +415,6 @@ class Robot:
                     self.backRGB = color
                 else:
                     self.backRGB = slots["rgb"]
-
             self.droid.set_back_LED_color(*self.backRGB)
             return True
 
@@ -410,11 +429,11 @@ class Robot:
                 if not slots["rgb"]:
                     color = self.askForColor("front")
                     askedForColor = True
-                    if not color: return False
+                    if not color:
+                        return False
                     self.frontRGB = color
                 else:
                     self.frontRGB = slots["rgb"]
-
             self.droid.set_front_LED_color(*self.frontRGB)
             return True
 
@@ -448,8 +467,8 @@ class Robot:
             self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             self.logicDisplayIntensity = 0
             self.droid.set_logic_display_intensity(self.logicDisplayIntensity)
-            self.backRGB = tuple(x/2 for x in self.backRGB)
-            self.frontRGB = tuple(x/2 for x in self.frontRGB)
+            self.backRGB = tuple(x / 2 for x in self.backRGB)
+            self.frontRGB = tuple(x / 2 for x in self.frontRGB)
             self.droid.set_back_LED_color(*self.backRGB)
             self.droid.set_front_LED_color(*self.frontRGB)
             return True
@@ -460,8 +479,8 @@ class Robot:
             self.droid.set_logic_display_intensity(self.logicDisplayIntensity)
             return True
         elif "blink" in slots["intensities"]:
-            self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1)%2)
-            self.droid.set_logic_display_intensity((self.holoProjectorIntensity + 1)%2)
+            self.droid.set_holo_projector_intensity((self.holoProjectorIntensity + 1) % 2)
+            self.droid.set_logic_display_intensity((self.holoProjectorIntensity + 1) % 2)
             time.sleep(0.3)
             self.droid.set_holo_projector_intensity(self.holoProjectorIntensity)
             self.droid.set_logic_display_intensity(self.logicDisplayIntensity)  
@@ -478,6 +497,7 @@ class Robot:
 
         return False
 
+    # Parser for a directional command
     def directionParser(self, command):
         if re.search(r"\b(circle|donut)\b", command, re.I):
             if re.search(r"\b(counter)\b", command, re.I):
@@ -535,6 +555,7 @@ class Robot:
             self.droid.roll(0, 0, 0)
             return flag
 
+    # Parser for a animation command
     def animationParser(self, command):
         if re.search(r"\b(dance|move|moves)\b", command, re.I):
             self.droid.animate(3)
@@ -550,6 +571,7 @@ class Robot:
             return True
         return False
 
+    # Parser for a head command
     def headParser(self, command):
         if re.search(r"\b(left)\b", command, re.I):
             self.droid.rotate_head(-90)
@@ -591,6 +613,7 @@ class Robot:
             ret += " "
         return ret[:-1]
 
+    # Parser for a grid command
     def gridParser(self, command):
         if re.search("\d+ ?(x|by) ?\d+", command):
             arr = re.split("(x|[^a-zA-Z0-9])", command) # guaranteed to contain 2 numbers
@@ -699,6 +722,7 @@ class Robot:
         self.droid.play_sound(7)
         return False
 
+    # Parser for a state command
     def stateParser(self, command):
         if re.search(r"\b(color)\b", command, re.I):
             if re.search(r"\b(front|forward)\b", command, re.I):

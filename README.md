@@ -62,7 +62,7 @@ python3 audio_io.py
 
 ## Example Commands
 ### Light Commands
-1. Turn your front/back light / lights <color>
+1. Turn your front/back light / lights color
 2. Turn off your front/back light / lights
 3. Dim your front/back light / lights
 4. Increase the intensity of your front/back light / lights
@@ -90,10 +90,10 @@ python3 audio_io.py
 ### Grid Commands (Must Say "Comma" between 2 Coordinates)
 1. You are on a a by b grid
 2. You are at a, b
-3. There is/are <obj> at a, b
+3. There is/are obj at a, b
 4. Go to a, b
-5. There is/are <obj> above/below/to/on the left/right of <obj>
-6. Go to the top/bottom/left/right of <obj>
+5. There is/are obj above/below/to/on the left/right of obj
+6. Go to the top/bottom/left/right of obj
 ### Other Commands
 1. Quit / Bye
 

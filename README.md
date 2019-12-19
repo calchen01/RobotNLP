@@ -62,38 +62,41 @@ python3 audio_io.py
 
 ## Example Commands
 ### Light Commands
-1. Turn your front/back light / lights color
-2. Turn off your front/back light / lights
-3. Dim your front/back light / lights
-4. Increase the intensity of your front/back light / lights
-5. Flash the following colors for 2 seconds each: red, blue, green
+1. Turn your front/back light green
+2. Turn off your front/back light
+3. Flash the following colors for 2 seconds each: red, blue, green
 ### Directional Commands
 1. Make a (counter-clockwise) circle/donut
 2. Run in a (counter-clockwise) square
-3. Increase/decrease your speed / run faster/slower
-4. Sequential directional commands like “go straight, come back and turn left”
+3. Increase/decrease your speed
+4. Run faster/slower
+5. Speed up/slow down
+6. Sequential directional commands like “go straight, come back and turn left”
 ### Animation Commands
-1. Fall over
+1. Fall
 2. Run away
 3. Dance for me / make some moves
 4. Sing for me / make some noise
 5. Scream
 ### Head Commands
-1. Turn your head to face left/right/forward/back
-2. Look in front of/behind you / look forward
+1. Turn your head to face left
+2. Look behind ya
+3. Look forward
 ### State Commands
-1. What's the color(s) of your front/back light / lights?
+1. What's the color of your front/back light?
 2. What's your name?
-3. I wanna/want to call you name
-4. How much power do you have left?
-5. What's your battery status?
+3. How should I call you?
+4. I wanna call you Jack
+5. How much power do you have left?
+6. What's your battery status?
 ### Grid Commands (Must Say "Comma" between 2 Coordinates)
-1. You are on a a by b grid
-2. You are at a, b
-3. There is/are obj at a, b
-4. Go to a, b
-5. There is/are obj above/below/to/on the left/right of obj
-6. Go to the top/bottom/left/right of obj
+1. You are on a 3 by 3 grid
+2. You are at 0, 0
+3. There is a chair at 0, 1
+4. Go to the right of the chair
+5. Go to 0, 0
+6. There are some flowers below the chair
+7. There is a bomb at 2, 2
 ### Other Commands
 1. Quit / Bye
 

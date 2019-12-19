@@ -16,7 +16,7 @@ def main():
 
     while True:
         cmd = input("Please enter your instruction: ").lower()
-        if re.search(".*(exit|quit|bye|goodbye).*", cmd):
+        if re.search(".*(exit|quit|bye).*", cmd):
             print('Exiting...')
             break
         if len(cmd) == 0:

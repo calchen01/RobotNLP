@@ -10,6 +10,8 @@ stateSentences :: What is your orientation?
 stateSentences :: What is your current heading?
 stateSentences :: How much battery do you have left?
 stateSentences :: What is your battery status?
+stateSentences :: what's the color of your front light?
+stateSentences :: what's the color of your rear light?
 
 ## Direction commands
 
@@ -88,6 +90,8 @@ gridSentences :: Go to the left of the chair.
 gridSentences :: It’s not possible to go from 2,2 to 2,3.
 gridSentences :: Go back to 0,0
 gridSentences :: Go to 0,0
+gridSentences :: Go to three, three
+gridSentences :: go back to zero, zero
 
 ## The following new sentences were added when running R2D2
 

@@ -138,7 +138,7 @@ def listen_execute_loop(responses, robot):
 
             # Exit recognition if any of the transcribed phrases could be
             # one of our keywords.
-            if re.search(".*(exit|quit|bye|goodbye).*", cmd):
+            if re.search(".*(exit|quit|bye).*", cmd):
                 print("Exiting...")
                 # Disconnect the robot
                 robot.disconnect()

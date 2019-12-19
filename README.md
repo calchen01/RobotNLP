@@ -3,7 +3,7 @@
 ## Link to Demo Video
 https://vimeo.com/374821366
 
-## Instructions to Set up
+## Instructions for Setting up
 
 Put all .py files inside the src folder. Put "data" and "vectors" folders inside your project folder, parallel to the src folder. Put your .magnitude file inside the "vectors" folder.
 

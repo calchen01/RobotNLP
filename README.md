@@ -103,3 +103,10 @@ Inside the merge folder, you can find merge.py. If you put students' .py files i
 python3 merge.py
 ```
 A new file "r2d2TrainingSentences.txt" will be generated, which contains the merged training data from all students' .py files. The results are sorted according to categories and duplicates are removed.
+
+## Future Directions
+1. Add text-to-speech to make the IO more interactive
+2. Add more pattern matching to the different parsers
+3. Add more training sentences
+4. Find a better way to represent sentences. Right now we are splitting the sentence into words and take a component-wise average along each dimension with pretty good results.
+5. Right now, all sentences are fed into intent detection into one of 6 categories and after a category is determined, we have specific parser for that particular category. This is a trade-off: in the future, we can split the existing 6 cateogories into more categories and this will reduce the amount of pattern matching within each cateogory, but this will also require that our intent detection to be able to correctly classify an embedding, which may require 4) a better representation of the sentences.

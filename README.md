@@ -105,8 +105,8 @@ python3 merge.py
 A new file "r2d2TrainingSentences.txt" will be generated, which contains the merged training data from all students' .py files. The results are sorted according to categories and duplicates are removed.
 
 ## Future Directions
-1. Add text-to-speech to make the IO more interactive
-2. Add more pattern matching to the different parsers
-3. Add more training sentences
-4. Find a better way to represent sentences. Right now we are splitting the sentence into words and take a component-wise average along each dimension with pretty good results.
-5. Right now, all sentences are fed into intent detection into one of 6 categories and after a category is determined, we have specific parser for that particular category. This is a trade-off: in the future, we can split the existing 6 cateogories into more categories and this will reduce the amount of pattern matching within each cateogory, but this will also require that our intent detection to be able to correctly classify an embedding, which may require 4) a better representation of the sentences.
+1. Right now, all sentences are fed into intent detection to be classified into one of 6 categories. After a category is determined, we have specific parser for that particular category. In the future, we can split the existing 6 cateogories into more categories, which will reduce the amount of pattern matching within each cateogory. But this will also require more accurate classification/intent detection, which may require a better representation of the sentence or a better way to generate a sentence embedding.
+2. Find a better representation of the sentence or a better way to generate a sentence embedding. Right now we are splitting the sentence into words, getting an embedding for each word and taking a component-wise average along each dimension. The results are very good. But as we increase the number of categories, this may not be sufficient.
+3. Add text-to-speech to give the robot voice
+4. Add more pattern matching to existing parsers
+5. Add more training sentences

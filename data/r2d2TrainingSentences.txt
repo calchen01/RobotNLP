@@ -93,6 +93,8 @@ gridSentences :: Go back to 0,0
 gridSentences :: Go to 0,0
 gridSentences :: Go to three, three
 gridSentences :: go back to zero, zero
+gridSentences :: there are some flowers below the chair
+gridSentences :: there's a bomb to the right of the flowers
 
 ## The following new sentences were added when running R2D2
 

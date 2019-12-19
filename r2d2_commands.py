@@ -530,7 +530,7 @@ class Robot:
             else:
                 if self.speed >= 0.5:
                     self.speed -= 0.25
-            self.droid.animate(1)
+            self.droid.animate(0)
             return True
         else:
             flag = False
@@ -662,7 +662,9 @@ class Robot:
             except:
                 command += word + " "
         command = re.sub(" +", " ", command)
+        print("****************************************")
         print(command)
+        print("****************************************")
 
         if re.search("(\d+|to).*(x|by).*(\d+|to) grid", command):
             words = re.split("(x|[^a-zA-Z0-9])", command)
@@ -672,39 +674,62 @@ class Robot:
             for row in self.grid:
                 print(row)
             print("****************************************")
-            self.droid.animate(1)
+            self.droid.animate(0)
             return True
-        elif re.search("(s|re) .+ at.*(\d+|to).*(\d+|to)", command):
-            words = re.split("[^a-zA-Z0-9]", command)
-            x, y = self.extractCoord(words)
-            obj = self.extractObj(words)
-            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+        elif re.search("(s|re) .+ (at|to|on|above|below)", command):
+            # Replace obj with its coordinates
+            for obj in self.objCoord:
+                words = re.split(" ", obj)
+                for word in words:
+                    if re.search(word, command):
+                        x, y = self.objCoord[obj]
+                        if re.search("(left|west)", command):
+                            y -= 1
+                        elif re.search("(right|east)", command):
+                            y += 1
+                        elif re.search("(below|south|bottom)", command):
+                            x -= 1
+                        elif re.search("(above|north|top)", command):
+                            x += 1
+                        command = self.replaceWithCoord(command, x, y)
+                        print("****************************************")
+                        print(command)
+                        print("****************************************")
+                        break
+
+            if re.search("at.*(\d+|to).*(\d+|to)", command):
+                words = re.split("[^a-zA-Z0-9]", command)
+                x, y = self.extractCoord(words)
+                obj = self.extractObj(words)
+                if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                    print("****************************************")
+                    print("Grid is not initialized yet!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                    print("****************************************")
+                    print("Coordinate is out of grid!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                if obj == "":
+                    print("****************************************")
+                    print("You didn't specify what the obstacle(s) is/are!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                self.grid[x][y] = obj
+                self.objCoord[obj] = (x, y)
                 print("****************************************")
-                print("Grid is not initialized yet!")
+                for row in self.grid:
+                    print(row)
                 print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
-                print("****************************************")
-                print("Coordinate is out of grid!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            if obj == "":
-                print("****************************************")
-                print("You didn't specify what the obstacle(s) is/are!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            self.grid[x][y] = obj
-            self.objCoord[obj] = (x, y)
-            print("****************************************")
-            for row in self.grid:
-                print(row)
-            print("****************************************")
-            self.droid.animate(1)
-            return True
+                self.droid.animate(0)
+                return True
         elif re.search("you.*re.*at.*(\d+|to).*(\d+|to)", command):
+            if self.pos != (-1, -1):
+                self.grid[self.pos[0]][self.pos[1]] = ""
             arr = re.split("[^a-zA-Z0-9]", command)
             x, y = self.extractCoord(arr)
             if len(self.grid) == 0 or len(self.grid[0]) == 0:
@@ -726,26 +751,28 @@ class Robot:
             for row in self.grid:
                 print(row)
             print("****************************************")
-            self.droid.animate(1)
+            self.droid.animate(0)
             return True
         elif re.search("go.*to", command):
             # Replace obj with its coordinates
             for obj in self.objCoord:
-                if re.search(obj, command):
-                    x, y = self.objCoord[obj]
-                    print(x)
-                    print(y)
-                    if re.search("(left|west)", command):
-                        y -= 1
-                    elif re.search("(right|east)", command):
-                        y += 1
-                    elif re.search("(below|south|bottom)", command):
-                        x -= 1
-                    elif re.search("(above|north|top)", command):
-                        x += 1
-                    command = "go to " + str(x) + " , " + str(y)
-                    print(command)
-                    break
+                words = re.split(" ", obj)
+                for word in words:
+                    if re.search(word, command):
+                        x, y = self.objCoord[obj]
+                        if re.search("(left|west)", command):
+                            y -= 1
+                        elif re.search("(right|east)", command):
+                            y += 1
+                        elif re.search("(below|south|bottom)", command):
+                            x -= 1
+                        elif re.search("(above|north|top)", command):
+                            x += 1
+                        command = "go to " + str(x) + " , " + str(y)
+                        print("****************************************")
+                        print(command)
+                        print("****************************************")
+                        break
             if re.search("(\d+|to).*(\d+|to)", command):
                 arr = re.split("[^a-zA-Z0-9]", command)
                 x, y = self.extractCoord(arr)
@@ -772,7 +799,7 @@ class Robot:
                     print("****************************************")
                     print("You are already there!")
                     print("****************************************")
-                    self.droid.animate(1)
+                    self.droid.animate(0)
                     return True
                 self.grid[x][y] = "target"
                 print("****************************************")
@@ -824,7 +851,7 @@ class Robot:
                 for row in self.grid:
                     print(row)
                 print("****************************************")
-                self.droid.animate(1)
+                self.droid.animate(0)
                 return True
         self.droid.play_sound(7)
         return False
@@ -857,3 +884,15 @@ class Robot:
             return ret[:-1]
         else:
             return ret
+
+    # Replace obj with its coordinates
+    def replaceWithCoord(self, command, x, y):
+        words = re.split("[^a-zA-Z0-9]", command)
+        ret = ""
+        for word in words:
+            if word not in {"above", "below", "to", "on"}:
+                ret += word + " "
+            else:
+                break
+        ret += "at " + str(x) + " , " + str(y)
+        return ret

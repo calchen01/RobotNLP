@@ -61,25 +61,41 @@ python3 audio_io.py
 ```
 
 ## Example Commands
-1. Make a circle
-2. Run in a counter clockwise square
-3. Turn you front/back/rear light <color>
-4. What color is your front/back/rear light?
-5. What’s your name?
-6. Directional commands like “go straight, come back and turn left”
-7. Dance/sing for me
-8. Make some noise/moves
-9. You are on a a by b grid
-10. You are at a, b
-11. There is … at a, b
-12. Go to a, b
-13. Fall
-14. What’s your battery status?
-15. Increase/decrease your speed
-16. Scream
-17. Turn your head to face left/right
-18. Look behind you
-19. Quit
+### Light Commands
+1. Turn your front/back light / lights <color>
+2. Turn off your front/back light / lights
+3. Dim your front/back light / lights
+4. Increase the intensity of your front/back light / lights
+5. Flash the following colors for 2 seconds each: red, blue, green
+### Directional Commands
+1. Make a (counter-clockwise) circle/donut
+2. Run in a (counter-clockwise) square
+3. Increase/decrease your speed / run faster/slower
+4. Sequential directional commands like “go straight, come back and turn left”
+### Animation Commands
+1. Fall over
+2. Run away
+3. Dance for me / make some moves
+4. Sing for me / make some noise
+5. Scream
+### Head Commands
+1. Turn your head to face left/right/forward/back
+2. Look in front of/behind you / look forward
+### State Commands
+1. What's the color(s) of your front/back light / lights?
+2. What's your name?
+3. I wanna/want to call you <name>
+4. How much power do you have left?
+5. What's your battery status?
+### Grid Commands (Must Say "Comma" between 2 Coordinates)
+1. You are on a <a> by <b> grid
+2. You are at <a>, <b>
+3. There is/are <obj> at <a>, <b>
+4. Go to <a>, <b>
+5. There is/are <obj> above/below/to/on the left/right of <obj>
+6. Go to the top/bottom/left/right of <obj>
+### Other Commands
+1. Quit / Bye
 
 ## Training files merger
 Inside the merge folder, you can find merge.py. If you put students' .py files inside the merge folder and call

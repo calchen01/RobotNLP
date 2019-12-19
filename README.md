@@ -88,10 +88,10 @@ python3 audio_io.py
 4. How much power do you have left?
 5. What's your battery status?
 ### Grid Commands (Must Say "Comma" between 2 Coordinates)
-1. You are on a <a> by <b> grid
-2. You are at <a>, <b>
-3. There is/are <obj> at <a>, <b>
-4. Go to <a>, <b>
+1. You are on a a by b grid
+2. You are at a, b
+3. There is/are <obj> at a, b
+4. Go to a, b
 5. There is/are <obj> above/below/to/on the left/right of <obj>
 6. Go to the top/bottom/left/right of <obj>
 ### Other Commands

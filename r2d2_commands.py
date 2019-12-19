@@ -88,6 +88,7 @@ class Robot:
         self.grid = [[]]
         self.speed = 0.5
         self.pos = (-1, -1)
+        self.objCoord = dict()
 
         # Load and process color data
         self.colorToRGB = {}
@@ -500,8 +501,8 @@ class Robot:
 
     # Parser for a directional command
     def directionParser(self, command):
-        if re.search(".*(circle|donut).*", command):
-            if re.search(".*counter.*", command):
+        if re.search("(circle|donut)", command):
+            if re.search("counter", command):
                 for heading in range(360, 0, -30):
                     self.droid.roll(self.speed, heading % 360, 0.6)
             else:
@@ -509,8 +510,8 @@ class Robot:
                     self.droid.roll(self.speed, heading, 0.6)
             self.droid.roll(0, 0, 0)
             return True
-        elif re.search(".*square.*", command):
-            if re.search(".*counter.*", command):
+        elif re.search("square", command):
+            if re.search("counter", command):
                 for heading in range(360, 0, -90):
                     self.droid.roll(0, heading % 360, 0)
                     time.sleep(0.35)
@@ -522,8 +523,8 @@ class Robot:
                     self.droid.roll(self.speed, heading, 0.6)
             self.droid.roll(0, 0, 0)
             return True
-        elif re.search(".*(speed|slow|faster|slower).*", command):
-            if re.search(".*(increase|faster|up).*", command):
+        elif re.search("(speed|slow|faster|slower)", command):
+            if re.search("(increase|faster|up)", command):
                 if self.speed <= 0.75:
                     self.speed += 0.25
             else:
@@ -560,20 +561,20 @@ class Robot:
 
     # Parser for a animation command
     def animationParser(self, command):
-        if re.search(".*fall.*", command):
+        if re.search("fall", command):
             self.droid.animate(14)
             return True
-        elif re.search(".*run away.*", command):
+        elif re.search("run away", command):
             self.droid.animate(19)
             return True
-        elif re.search(".*(dance|move).*", command):
+        elif re.search("(dance|move)", command):
             self.droid.animate(20)
             return True
 
-        elif re.search(".*(sing|sound|noise).*", command):
+        elif re.search("(sing|sound|noise)", command):
             self.droid.play_sound(3)
             return True
-        elif re.search(".*scream.*", command):
+        elif re.search("scream", command):
             self.droid.play_sound(7)
             return True
 
@@ -581,28 +582,28 @@ class Robot:
 
     # Parser for a head command
     def headParser(self, command):
-        if re.search(".*(forward|ahead|straight|front).*", command):
+        if re.search("(forward|ahead|straight|front)", command):
             self.droid.rotate_head(0)
             return True
-        elif re.search(".*left.*", command):
+        elif re.search("left", command):
             self.droid.rotate_head(-90)
             return True
-        elif re.search(".*right.*", command):
+        elif re.search("right", command):
             self.droid.rotate_head(90)
             return True
-        elif re.search(".*(behind|back).*", command):
+        elif re.search("(behind|back)", command):
             self.droid.rotate_head(180)
             return True
         return False
 
     # Parser for a state command
     def stateParser(self, command):
-        if re.search(".*color.*", command):
-            if re.search(".*(front|forward).*", command):
+        if re.search("color", command):
+            if re.search("(front|forward)", command):
                 print("****************************************")
                 print(self.frontRGB)
                 print("****************************************")
-            elif re.search(".*(back|rear|rare).*", command):
+            elif re.search("(back|rear|rare)", command):
                 print("****************************************")
                 print(self.backRGB)
                 print("****************************************")
@@ -612,8 +613,8 @@ class Robot:
                 print(self.backRGB)
                 print("****************************************")
             return True
-        elif re.search(".*(name|call).*", command):
-            if re.search(".*(want|wanna).*you.*", command):
+        elif re.search("(name|call)", command):
+            if re.search("(want|wanna).*you", command):
                 if self.extractName(command) == "":
                     print("****************************************")
                     print("You didn't give me a name!")
@@ -627,7 +628,7 @@ class Robot:
                 print(self.name)
                 print("****************************************")
             return True
-        elif re.search(".*(power|battery).*", command):
+        elif re.search("(power|battery)", command):
             print("****************************************")
             self.droid.battery()
             print("****************************************")
@@ -663,7 +664,7 @@ class Robot:
         command = re.sub(" +", " ", command)
         print(command)
 
-        if re.search(".*(\d+|to).*(x|by).*(\d+|to) grid.*", command):
+        if re.search("(\d+|to).*(x|by).*(\d+|to) grid", command):
             words = re.split("(x|[^a-zA-Z0-9])", command)
             x, y = self.extractCoord(words)
             self.grid = [["" for col in range(y)] for row in range(x)]
@@ -673,7 +674,7 @@ class Robot:
             print("****************************************")
             self.droid.animate(1)
             return True
-        elif re.search(".*(s|re) .+ at.*(\d+|to).*(\d+|to).*", command):
+        elif re.search("(s|re) .+ at.*(\d+|to).*(\d+|to)", command):
             words = re.split("[^a-zA-Z0-9]", command)
             x, y = self.extractCoord(words)
             obj = self.extractObj(words)
@@ -696,13 +697,14 @@ class Robot:
                 self.droid.play_sound(7)
                 return False
             self.grid[x][y] = obj
+            self.objCoord[obj] = (x, y)
             print("****************************************")
             for row in self.grid:
                 print(row)
             print("****************************************")
             self.droid.animate(1)
             return True
-        elif re.search("you are at.*(\d+|to).*(\d+|to).*", command):
+        elif re.search("you.*re.*at.*(\d+|to).*(\d+|to)", command):
             arr = re.split("[^a-zA-Z0-9]", command)
             x, y = self.extractCoord(arr)
             if len(self.grid) == 0 or len(self.grid[0]) == 0:
@@ -719,91 +721,111 @@ class Robot:
                 return False
             self.pos = (x, y)
             self.grid[x][y] = "you"
+            self.objCoord["you"] = (x, y)
             print("****************************************")
             for row in self.grid:
                 print(row)
             print("****************************************")
             self.droid.animate(1)
             return True
-        elif re.search("go.*to.*(\d+|to).*(\d+|to)", command):
-            arr = re.split("[^a-zA-Z0-9]", command)
-            x, y = self.extractCoord(arr)
-            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+        elif re.search("go.*to", command):
+            # Replace obj with its coordinates
+            for obj in self.objCoord:
+                if re.search(obj, command):
+                    x, y = self.objCoord[obj]
+                    print(x)
+                    print(y)
+                    if re.search("(left|west)", command):
+                        y -= 1
+                    elif re.search("(right|east)", command):
+                        y += 1
+                    elif re.search("(below|south|bottom)", command):
+                        x -= 1
+                    elif re.search("(above|north|top)", command):
+                        x += 1
+                    command = "go to " + str(x) + " , " + str(y)
+                    print(command)
+                    break
+            if re.search("(\d+|to).*(\d+|to)", command):
+                arr = re.split("[^a-zA-Z0-9]", command)
+                x, y = self.extractCoord(arr)
+                if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                    print("****************************************")
+                    print("Grid is not initialized yet!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                    print("****************************************")
+                    print("Coordinate is out of grid!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                if self.pos == (-1, -1):
+                    print("****************************************")
+                    print("Current position hasn't been specified!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                target = (x, y)
+                if target == self.pos:
+                    print("****************************************")
+                    print("You are already there!")
+                    print("****************************************")
+                    self.droid.animate(1)
+                    return True
+                self.grid[x][y] = "target"
                 print("****************************************")
-                print("Grid is not initialized yet!")
+                for row in self.grid:
+                    print(row)
                 print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                # Create a graph and calculate the moves
+                G = Graph(self.grid)
+                moves = A_star(G, self.pos, target, manhattan_distance_heuristic)
+                if moves is None:
+                    print("****************************************")
+                    print("Impossible to get to the target!")
+                    print("****************************************")
+                    self.grid[x][y] = ""
+                    self.droid.play_sound(7)
+                    return False
+                else:
+                    print("****************************************")
+                    print(moves)
+                    print("****************************************")
+                # Store the initial position
+                init_x, init_y = self.pos
+                for i in range(1, len(moves)):
+                    if moves[i][1] > moves[i - 1][1]:
+                        # Move right
+                        self.droid.roll(0, 90, 0)
+                        time.sleep(0.35)
+                        self.droid.roll(self.speed, 90, 0.6)
+                    elif moves[i][1] < moves[i - 1][1]:
+                        # Move left
+                        self.droid.roll(0, 270, 0)
+                        time.sleep(0.35)
+                        self.droid.roll(self.speed, 270, 0.6)
+                    elif moves[i][0] > moves[i - 1][0]:
+                        # Move down
+                        self.droid.roll(0, 180, 0)
+                        time.sleep(0.35)
+                        self.droid.roll(self.speed, 180, 0.6)
+                    elif moves[i][0] < moves[i - 1][0]:
+                        # Move up
+                        self.droid.roll(0, 0, 0)
+                        time.sleep(0.35)
+                        self.droid.roll(self.speed, 0, 0.6)
+                    self.pos = moves[i]
+                self.grid[x][y] = "you"
+                self.objCoord["you"] = (x, y)
+                self.grid[init_x][init_y] = ""
                 print("****************************************")
-                print("Coordinate is out of grid!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            if self.pos == (-1, -1):
-                print("****************************************")
-                print("Current position hasn't been specified!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            target = (x, y)
-            if target == self.pos:
-                print("****************************************")
-                print("You are already there!")
+                for row in self.grid:
+                    print(row)
                 print("****************************************")
                 self.droid.animate(1)
                 return True
-            self.grid[x][y] = "target"
-            print("****************************************")
-            for row in self.grid:
-                print(row)
-            print("****************************************")
-            # Create a graph and calculate the moves
-            G = Graph(self.grid)
-            moves = A_star(G, self.pos, target, manhattan_distance_heuristic)
-            if moves is None:
-                print("****************************************")
-                print("Impossible to get to the target!")
-                print("****************************************")
-                self.grid[x][y] = ""
-                self.droid.play_sound(7)
-                return False
-            else:
-                print("****************************************")
-                print(moves)
-                print("****************************************")
-            # Store the initial position
-            init_x, init_y = self.pos
-            for i in range(1, len(moves)):
-                if moves[i][1] > moves[i - 1][1]:
-                    # Move right
-                    self.droid.roll(0, 90, 0)
-                    time.sleep(0.35)
-                    self.droid.roll(self.speed, 90, 0.6)
-                elif moves[i][1] < moves[i - 1][1]:
-                    # Move left
-                    self.droid.roll(0, 270, 0)
-                    time.sleep(0.35)
-                    self.droid.roll(self.speed, 270, 0.6)
-                elif moves[i][0] > moves[i - 1][0]:
-                    # Move down
-                    self.droid.roll(0, 180, 0)
-                    time.sleep(0.35)
-                    self.droid.roll(self.speed, 180, 0.6)
-                elif moves[i][0] < moves[i - 1][0]:
-                    # Move up
-                    self.droid.roll(0, 0, 0)
-                    time.sleep(0.35)
-                    self.droid.roll(self.speed, 0, 0.6)
-                self.pos = moves[i]
-            self.grid[x][y] = "you"
-            self.grid[init_x][init_y] = ""
-            print("****************************************")
-            for row in self.grid:
-                print(row)
-            print("****************************************")
-            self.droid.animate(1)
-            return True
         self.droid.play_sound(7)
         return False
 
@@ -827,9 +849,9 @@ class Robot:
         for word in words:
             if word == "at":
                 activated = False
-            if activated:
+            if activated and word not in {"a", "an", "the"}:
                 ret += word + " "
-            if word in {"is", "are"}:
+            if word in {"s", "re", "is", "are"}:
                 activated = True
         if len(ret) > 0 and ret[-1] == " ":
             return ret[:-1]

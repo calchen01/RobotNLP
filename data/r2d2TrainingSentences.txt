@@ -77,6 +77,7 @@ headSentences :: look behind you
 headSentences :: look forward
 headSentences :: look ahead
 headSentences :: look back
+headSentences :: look to your right
 
 ## Relationships on a grid.
 

@@ -84,7 +84,7 @@ python3 audio_io.py
 ### State Commands
 1. What's the color(s) of your front/back light / lights?
 2. What's your name?
-3. I wanna/want to call you <name>
+3. I wanna/want to call you name
 4. How much power do you have left?
 5. What's your battery status?
 ### Grid Commands (Must Say "Comma" between 2 Coordinates)

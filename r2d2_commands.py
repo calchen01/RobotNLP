@@ -623,6 +623,7 @@ class Robot:
                     return False
                 else:
                     self.name = self.extractName(command)
+                    self.droid.animate(0)
             else:
                 print("****************************************")
                 print(self.name)
@@ -676,6 +677,32 @@ class Robot:
             print("****************************************")
             self.droid.animate(0)
             return True
+        elif re.search("you.*re.*at.*(\d+|to).*(\d+|to)", command):
+            if self.pos != (-1, -1):
+                self.grid[self.pos[0]][self.pos[1]] = ""
+            arr = re.split("[^a-zA-Z0-9]", command)
+            x, y = self.extractCoord(arr)
+            if len(self.grid) == 0 or len(self.grid[0]) == 0:
+                print("****************************************")
+                print("Grid is not initialized yet!")
+                print("****************************************")
+                self.droid.play_sound(7)
+                return False
+            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
+                print("****************************************")
+                print("Coordinate is out of grid!")
+                print("****************************************")
+                self.droid.play_sound(7)
+                return False
+            self.pos = (x, y)
+            self.grid[x][y] = "you"
+            self.objCoord["you"] = (x, y)
+            print("****************************************")
+            for row in self.grid:
+                print(row)
+            print("****************************************")
+            self.droid.animate(0)
+            return True
         elif re.search("(s|re) .+ (at|to|on|above|below)", command):
             # Replace obj with its coordinates
             for obj in self.objCoord:
@@ -688,9 +715,9 @@ class Robot:
                         elif re.search("(right|east)", command):
                             y += 1
                         elif re.search("(below|south|bottom)", command):
-                            x -= 1
-                        elif re.search("(above|north|top)", command):
                             x += 1
+                        elif re.search("(above|north|top)", command):
+                            x -= 1
                         command = self.replaceWithCoord(command, x, y)
                         print("****************************************")
                         print(command)
@@ -727,32 +754,6 @@ class Robot:
                 print("****************************************")
                 self.droid.animate(0)
                 return True
-        elif re.search("you.*re.*at.*(\d+|to).*(\d+|to)", command):
-            if self.pos != (-1, -1):
-                self.grid[self.pos[0]][self.pos[1]] = ""
-            arr = re.split("[^a-zA-Z0-9]", command)
-            x, y = self.extractCoord(arr)
-            if len(self.grid) == 0 or len(self.grid[0]) == 0:
-                print("****************************************")
-                print("Grid is not initialized yet!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            if x < 0 or x >= len(self.grid) or y < 0 or y >= len(self.grid[0]):
-                print("****************************************")
-                print("Coordinate is out of grid!")
-                print("****************************************")
-                self.droid.play_sound(7)
-                return False
-            self.pos = (x, y)
-            self.grid[x][y] = "you"
-            self.objCoord["you"] = (x, y)
-            print("****************************************")
-            for row in self.grid:
-                print(row)
-            print("****************************************")
-            self.droid.animate(0)
-            return True
         elif re.search("go.*to", command):
             # Replace obj with its coordinates
             for obj in self.objCoord:
@@ -765,9 +766,9 @@ class Robot:
                         elif re.search("(right|east)", command):
                             y += 1
                         elif re.search("(below|south|bottom)", command):
-                            x -= 1
-                        elif re.search("(above|north|top)", command):
                             x += 1
+                        elif re.search("(above|north|top)", command):
+                            x -= 1
                         command = "go to " + str(x) + " , " + str(y)
                         print("****************************************")
                         print(command)
@@ -791,6 +792,12 @@ class Robot:
                 if self.pos == (-1, -1):
                     print("****************************************")
                     print("Current position hasn't been specified!")
+                    print("****************************************")
+                    self.droid.play_sound(7)
+                    return False
+                if (x, y) in self.objCoord.values():
+                    print("****************************************")
+                    print("Impossible to get to the target!")
                     print("****************************************")
                     self.droid.play_sound(7)
                     return False

@@ -5,7 +5,7 @@ This program merges all training sentences into a single txt file
 '''
 
 # Change the directory below which contains all the files to be merged
-directory = os.fsencode("/Users/calchen/Desktop/RobotNLP/merge")
+directory = os.fsencode("/Users/John1999/temp_folder")
 
 # Given a line, extract the category
 def getCategory(line):
@@ -14,17 +14,17 @@ def getCategory(line):
         if line[i] == "=" or line[i] == " ":
             break
         i += 1
-    return line[:i]
+    return line[3:i-10] + "Sentences"
 
 # Given a line, extract all the training sentences
 def getSentences(line):
     indexes = []
     results = []
     for i in range(len(line)):
-        if line[i] == "'" or line[i] == "\"":
+        if line[i] == "\"":
             indexes.append(i)
-    for i in range(1, len(indexes), 2):
-        results.append(line[indexes[0] + 1 : indexes[1]])
+    for i in range(0, len(indexes)-1, 2):
+        results.append(line[indexes[i] + 1 : indexes[i+1]])
     return results
 
 # A map storing all parsed results {category: set(training sentences)}
@@ -46,6 +46,9 @@ for file in os.listdir(directory):
                         store[category] = set()
                 if category != "":
                     if len(getSentences(line)) > 0:
+                        if "'" in line:
+                            print(filename)
+                            print(line)
                         for sentence in getSentences(line):
                             store[category].add(sentence)
                     if re.search(".*]", line):
